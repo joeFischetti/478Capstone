@@ -14,13 +14,15 @@ public class ManageCourseList extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
 	private JPanel mainPanel, leftPanel, leftContentPanel, leftButtonPanel, rightPanel,
-	rightContentPanel, rightClassInfoPanel, rightStudentListPanel, rightButtonPanel, homeButtonPanel;
+	rightContentPanel, rightClassInfoPanel, rightAssignmentListPanel, rightButtonPanel, homeButtonPanel,
+			assignmentButtonsPanel;
 
 	private JTextField txtCourseNumber, txtCourseName, txtCourseDescription, txtMaxStudents, txtMeetingDay;
 
-	private JButton btnDeleteClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome;
+	private JButton btnDeleteClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome, btnNewAssignment,
+			btnDeleteAssignment;
 
-	private JScrollPane courseList;
+	private JScrollPane courseList, assignmentList;
 	
 
 
@@ -35,9 +37,10 @@ public class ManageCourseList extends JPanel{
 		rightPanel = new JPanel();
 		rightContentPanel = new JPanel();
 		rightClassInfoPanel = new JPanel();
-		rightStudentListPanel = new JPanel();
+		rightAssignmentListPanel = new JPanel();
 		rightButtonPanel = new JPanel();
 		homeButtonPanel = new JPanel();
+		assignmentButtonsPanel = new JPanel();
 						
 						
 		//Create the labels for each of the different pieces of course data
@@ -70,8 +73,10 @@ public class ManageCourseList extends JPanel{
 						
 		rightContentPanel.setLayout(new GridLayout(2, 1, 0, 0));
 		rightClassInfoPanel.setLayout(new GridLayout(0, 2, 0, 0));
-		rightStudentListPanel.setLayout(new BorderLayout());
+		rightAssignmentListPanel.setLayout(new BorderLayout());
 		rightPanel.setLayout(new BorderLayout(0, 0));
+		
+		assignmentButtonsPanel.setLayout(new GridLayout(1, 2));
 						
 				
 		//Create the buttons that are used on the panel.
@@ -80,18 +85,22 @@ public class ManageCourseList extends JPanel{
 		btnLoadClassInfo = new JButton("Show Course Info >>>");
 		btnSubmitAboveChanges = new JButton("<<< Store Course info");
 		btnCancelToHome = new JButton("Home Screen");
-						
+		btnNewAssignment = new JButton("Create Assignment");
+		btnDeleteAssignment = new JButton("Delete Selected Assignment");
+
 						
 		//TEMPORARY CODE*******************
 		String[] listOfCourses = {"Course 1", "Course 2", "Course 3", "Course 4", "Course 5", "Course 6"};
-
+		String[] listOfAssignments = {"Assignment1", "Assignment 2", "Assignment 3"};
 				
 		courseList = new JScrollPane();
+		assignmentList = new JScrollPane();
 						
 		JList<String> list = new JList<String>(listOfCourses);
-
+		JList<String> list2 = new JList<String>(listOfAssignments);
 				
 		courseList.setViewportView(list);
+		assignmentList.setViewportView(list2);
 
 		//Initialize the text fields with placeholder info
 		//
@@ -134,10 +143,16 @@ public class ManageCourseList extends JPanel{
 					
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
 		leftPanel.add(leftButtonPanel, BorderLayout.SOUTH);
-					
-						
+		
+		assignmentButtonsPanel.add(btnNewAssignment);
+		assignmentButtonsPanel.add(btnDeleteAssignment);
+
+		rightAssignmentListPanel.add(assignmentList);
+		rightAssignmentListPanel.add(assignmentButtonsPanel, BorderLayout.SOUTH);		
+	
+
 		rightContentPanel.add(rightClassInfoPanel);
-		rightContentPanel.add(rightStudentListPanel);
+		rightContentPanel.add(rightAssignmentListPanel);
 				
 		rightPanel.add(rightContentPanel, BorderLayout.CENTER);
 		rightPanel.add(rightButtonPanel, BorderLayout.SOUTH);

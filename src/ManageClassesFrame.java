@@ -14,11 +14,13 @@ public class ManageClassesFrame extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
 	private JPanel mainPanel, leftPanel, leftContentPanel, leftButtonPanel, rightPanel,
-					rightContentPanel, rightClassInfoPanel, rightStudentListPanel, rightButtonPanel, homeButtonPanel;
+					rightContentPanel, rightClassInfoPanel, rightStudentListPanel, rightButtonPanel, homeButtonPanel,
+					studentListButtonsPanel;
 	
 	private JTextField classID, txtCourseNum, txtMeetingDay, txtMaxStudents;
 	
-	private JButton btnDeleteClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome;
+	private JButton btnDeleteClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome, btnAddStudent,
+					btnDeleteStudent;
 	
 	private JScrollPane classList, classRoster;
 
@@ -36,6 +38,7 @@ public class ManageClassesFrame extends JPanel{
 		rightStudentListPanel = new JPanel();
 		rightButtonPanel = new JPanel();
 		homeButtonPanel = new JPanel();
+		studentListButtonsPanel = new JPanel();
 				
 				
 		//Create the labels for each of the different pieces of class data
@@ -68,7 +71,7 @@ public class ManageClassesFrame extends JPanel{
 		rightClassInfoPanel.setLayout(new GridLayout(0, 2, 0, 0));
 		rightStudentListPanel.setLayout(new BorderLayout());
 		rightPanel.setLayout(new BorderLayout(0, 0));
-				
+		studentListButtonsPanel.setLayout(new GridLayout(1, 2));
 		
 		//Create the buttons that are used on the panel.
 		//
@@ -76,7 +79,8 @@ public class ManageClassesFrame extends JPanel{
 		btnLoadClassInfo = new JButton("Show Class Info >>>");
 		btnSubmitAboveChanges = new JButton("<<< Store Class info");
 		btnCancelToHome = new JButton("Home Screen");
-				
+		btnAddStudent = new JButton("Add Student");
+		btnDeleteStudent = new JButton("Delete Student");
 				
 		//TEMPORARY CODE*******************
 		String[] listOfClasses = {"Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6"};
@@ -124,7 +128,12 @@ public class ManageClassesFrame extends JPanel{
 		rightClassInfoPanel.add(lblMaxStudents);
 		rightClassInfoPanel.add(txtMaxStudents);
 		
+		studentListButtonsPanel.add(btnAddStudent);
+		studentListButtonsPanel.add(btnDeleteStudent);
+		
 		rightStudentListPanel.add(classRoster, BorderLayout.CENTER);
+		rightStudentListPanel.add(studentListButtonsPanel, BorderLayout.SOUTH);
+		
 		
 		rightButtonPanel.add(btnSubmitAboveChanges);
 				
@@ -132,7 +141,7 @@ public class ManageClassesFrame extends JPanel{
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
 		leftPanel.add(leftButtonPanel, BorderLayout.SOUTH);
 				
-				
+		
 		rightContentPanel.add(rightClassInfoPanel);
 		rightContentPanel.add(rightStudentListPanel);
 		

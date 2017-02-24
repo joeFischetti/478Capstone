@@ -16,6 +16,7 @@ public class Gradebook extends JFrame{
 	private ManageStudentsFrame manageStudents;
 	private ManageClassesFrame manageClasses;
 	private ManageCourseList manageCourses;
+	private EnterGrades enterGrades;
 	
 	
 	private JPanel applicationPanel;
@@ -28,7 +29,8 @@ public class Gradebook extends JFrame{
 	private static String 	WELCOME = "welcome", 
 							MANAGESTUDENTS = "manage students", 
 							MANAGECLASSES = "manage classes", 
-							MANAGECOURSES = "manage courses";
+							MANAGECOURSES = "manage courses",
+							ENTERGRADES = "enter grades";
 	
 	
 	public static void main(String args[]){
@@ -80,6 +82,8 @@ public class Gradebook extends JFrame{
 		manageCourses = new ManageCourseList();
 		manageCourses.homeButtonActionListener(new ShowWelcomeScreen());
 		
+		enterGrades = new EnterGrades();
+		enterGrades.homeButtonActionListener(new ShowWelcomeScreen());
 		
 		//Create the cardlayout, and initialize it with
 		//	each of the different panels.  Also set up the
@@ -91,6 +95,7 @@ public class Gradebook extends JFrame{
 		applicationPanel.add(manageCourses, MANAGECOURSES);
 		applicationPanel.add(manageClasses, MANAGECLASSES);
 		applicationPanel.add(manageStudents, MANAGESTUDENTS);
+		applicationPanel.add(enterGrades, ENTERGRADES);
 		
 		
 		//Add the main panel to the center of the screen and set visible
@@ -150,7 +155,11 @@ public class Gradebook extends JFrame{
 	
 	class ShowGradesCard implements ActionListener{
 		public void actionPerformed(ActionEvent e){
-			
+			//Get the cardlayout from the applicationPanel, and 
+			//	show the correct frame
+			//
+			CardLayout cl = (CardLayout)applicationPanel.getLayout();
+			cl.show(applicationPanel, ENTERGRADES);
 		}
 	};
 	
