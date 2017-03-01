@@ -19,8 +19,8 @@ public class ManageCourseList extends JPanel{
 
 	private JTextField txtCourseNumber, txtCourseName, txtCourseDescription, txtMaxStudents, txtMeetingDay;
 
-	private JButton btnDeleteClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome, btnNewAssignment,
-			btnDeleteAssignment;
+	private JButton btnDeleteCourse, btnLoadCourseInfo, btnSubmitAboveChanges, btnCancelToHome, btnNewAssignment,
+			btnDeleteAssignment, btnAddCourse;
 
 	private JScrollPane courseList, assignmentList;
 	
@@ -81,8 +81,9 @@ public class ManageCourseList extends JPanel{
 				
 		//Create the buttons that are used on the panel.
 		//
-		btnDeleteClass = new JButton("Delete Course");
-		btnLoadClassInfo = new JButton("Show Course Info >>>");
+		btnDeleteCourse = new JButton("Delete Selected Course");
+		btnAddCourse = new JButton("Add New Course");
+		btnLoadCourseInfo = new JButton("Show Course Info >>>");
 		btnSubmitAboveChanges = new JButton("<<< Store Course info");
 		btnCancelToHome = new JButton("Home Screen");
 		btnNewAssignment = new JButton("Create Assignment");
@@ -123,8 +124,8 @@ public class ManageCourseList extends JPanel{
 		//
 		leftContentPanel.add(courseList);
 						
-		leftButtonPanel.add(btnDeleteClass);
-		leftButtonPanel.add(btnLoadClassInfo);
+		leftButtonPanel.add(btnAddCourse);
+		leftButtonPanel.add(btnLoadCourseInfo);
 						
 						
 		rightClassInfoPanel.add(lblCourseNumber);
@@ -139,7 +140,7 @@ public class ManageCourseList extends JPanel{
 		rightClassInfoPanel.add(txtMaxStudents);
 				
 		rightButtonPanel.add(btnSubmitAboveChanges);
-						
+		rightButtonPanel.add(btnDeleteCourse);
 					
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
 		leftPanel.add(leftButtonPanel, BorderLayout.SOUTH);
@@ -168,12 +169,24 @@ public class ManageCourseList extends JPanel{
 		this.add(homeButtonPanel, BorderLayout.SOUTH);
 	}
 			
-	public void deleteButtonActionListener(ActionListener dal){
-		btnDeleteClass.addActionListener(dal);
+	public void deleteCourseActionListener(ActionListener dcal){
+		btnDeleteCourse.addActionListener(dcal);
+	}
+	
+	public void addCourseActionListener(ActionListener acal){
+		btnAddCourse.addActionListener(acal);
+	}
+	
+	public void deleteAssignmentActionListener(ActionListener daal){
+		btnDeleteAssignment.addActionListener(daal);
+	}
+	
+	public void addAssignmentActionListener(ActionListener aaal){
+		btnNewAssignment.addActionListener(aaal);
 	}
 	
 	public void showClassActionListener(ActionListener scal){
-		btnLoadClassInfo.addActionListener(scal);
+		btnLoadCourseInfo.addActionListener(scal);
 	}
 			
 	public void submitChangesActionListener(ActionListener sal){

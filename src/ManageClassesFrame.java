@@ -19,7 +19,7 @@ public class ManageClassesFrame extends JPanel{
 	
 	private JTextField classID, txtCourseNum, txtMeetingDay, txtMaxStudents;
 	
-	private JButton btnDeleteClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome, btnAddStudent,
+	private JButton btnDeleteClass, btnAddClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome, btnAddStudent,
 					btnDeleteStudent;
 	
 	private JScrollPane classList, classRoster;
@@ -76,6 +76,7 @@ public class ManageClassesFrame extends JPanel{
 		//Create the buttons that are used on the panel.
 		//
 		btnDeleteClass = new JButton("Delete Class");
+		btnAddClass = new JButton("Add new Class");
 		btnLoadClassInfo = new JButton("Show Class Info >>>");
 		btnSubmitAboveChanges = new JButton("<<< Store Class info");
 		btnCancelToHome = new JButton("Home Screen");
@@ -115,7 +116,7 @@ public class ManageClassesFrame extends JPanel{
 		//
 		leftContentPanel.add(classList);
 				
-		leftButtonPanel.add(btnDeleteClass);
+		leftButtonPanel.add(btnAddClass);
 		leftButtonPanel.add(btnLoadClassInfo);
 				
 				
@@ -136,7 +137,7 @@ public class ManageClassesFrame extends JPanel{
 		
 		
 		rightButtonPanel.add(btnSubmitAboveChanges);
-				
+		rightButtonPanel.add(btnDeleteClass);
 			
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
 		leftPanel.add(leftButtonPanel, BorderLayout.SOUTH);
@@ -159,8 +160,20 @@ public class ManageClassesFrame extends JPanel{
 		this.add(homeButtonPanel, BorderLayout.SOUTH);
 	}
 	
-	public void deleteButtonActionListener(ActionListener dal){
+	public void deleteClassActionListener(ActionListener dal){
 		btnDeleteClass.addActionListener(dal);
+	}
+	
+	public void addClassActionListener(ActionListener dal){
+		btnAddClass.addActionListener(dal);
+	}
+	
+	public void deleteStudentActionListener(ActionListener dal){
+		btnDeleteStudent.addActionListener(dal);
+	}
+	
+	public void addStudentActionListener(ActionListener dal){
+		btnAddStudent.addActionListener(dal);
 	}
 	
 	public void showClassActionListener(ActionListener scal){

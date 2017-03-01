@@ -3,11 +3,13 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.GridLayout;
 import javax.swing.JScrollPane;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import javax.swing.JList;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 
 public class ManageStudentsFrame extends JPanel {
 
@@ -19,7 +21,9 @@ public class ManageStudentsFrame extends JPanel {
 	private JTextField 	txtFirstname, txtLastname, txtId, 
 						txtCity, txtState, txtZip, txtAddress, txtDob;
 	
-	private JButton btnLoadStudentInfo, btnSubmitAboveChanges, btnCancelToHome;
+	private JList<Student> list;
+	
+	private JButton btnLoadStudentInfo, btnSubmitAboveChanges, btnCancelToHome, btnNewStudent, btnDeleteStudent;
 
 
 	public ManageStudentsFrame() {
@@ -79,19 +83,13 @@ public class ManageStudentsFrame extends JPanel {
 		btnLoadStudentInfo = new JButton("Show Student Info >>>");
 		btnSubmitAboveChanges = new JButton("<<< Store Student info");
 		btnCancelToHome = new JButton("Home Screen");
-		
-		
-		//TEMPORARY CODE*******************
-		String[] listOfStudents = {"Student Name", "Student Name","Student Name","Student Name","Student Name","Student Name",
-				"Student Name","Student Name","Student Name","Student Name","Student Name","Student Name","Student Name",
-				"Student Name","Student Name","Student Name","Student Name","Student Name","Student Name","Student Name",
-				"Student Name","Student Name","Student Name","Student Name","Student Name","Student Name","Student Name",
-				"Student Name","Student Name","Student Name","Student Name","Student Name","Student Name","Student Name",
-				"Student Name","Student Name","Student Name","Student Name","Student Name","Student Name","Student Name"};
+		btnNewStudent = new JButton("Add New Student");
+		btnDeleteStudent = new JButton("Delete Selected Student");
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
 		
-		JList<String> list = new JList<String>(listOfStudents);
+		list = new JList<Student>();
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		scrollPane_1.setViewportView(list);
 		
 
@@ -126,7 +124,9 @@ public class ManageStudentsFrame extends JPanel {
 		//
 		leftContentPanel.add(scrollPane_1);
 		
+		leftButtonPanel.add(btnNewStudent);
 		leftButtonPanel.add(btnLoadStudentInfo);
+		
 		
 		
 		rightContentPanel.add(lblIdNumber);
@@ -147,7 +147,7 @@ public class ManageStudentsFrame extends JPanel {
 		rightContentPanel.add(txtDob);
 		
 		rightButtonPanel.add(btnSubmitAboveChanges);
-		
+		rightButtonPanel.add(btnDeleteStudent);
 		
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
 		leftPanel.add(leftButtonPanel, BorderLayout.SOUTH);
@@ -179,5 +179,34 @@ public class ManageStudentsFrame extends JPanel {
 	public void homeButtonActionListener(ActionListener hal){
 		btnCancelToHome.addActionListener(hal);
 	}
-
+	
+	public void newStudentActionListener(ActionListener nsal){
+		btnNewStudent.addActionListener(nsal);
+	}
+	
+	public void deleteStudentActionListener(ActionListener dsal){
+		btnDeleteStudent.addActionListener(dsal);
+	}
+	
+	public void setStudentList(DefaultListModel<Student> students){
+		list.setModel(students);
+		
+	}
+	
+	public int getSelectedStudentIndex(){
+		return list.getSelectedIndex();
+	}
+	
+	public void displayStudentInfo(Student selected){
+		
+		txtId.setText(selected.getID() + "");
+		txtFirstname.setText(selected.getFirst());		
+		txtLastname.setText(selected.getLast());
+		txtAddress.setText(selected.getAddress());
+		txtCity.setText(selected.getCity());
+		txtState.setText(selected.getState());
+		txtZip.setText(selected.getZip() + "");
+		txtDob.setText(selected.getDOB());
+		
+	}
 }

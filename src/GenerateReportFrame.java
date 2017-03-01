@@ -10,12 +10,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 
-public class EnterGrades extends JPanel{
+public class GenerateReportFrame extends JPanel{
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel mainPanel, topPanel, topLeftContentPane, topRightContentPane, bottomPanel, homeButtonPanel,
-					studentSelectPanel, classSelectPanel, bottomNorthPanel;
+	private JPanel 	mainPanel, topPanel, topLeftContentPane, topRightContentPane, 
+					bottomPanel, homeButtonPanel, studentSelectPanel, 
+					classSelectPanel, bottomNorthPanel;
 	
 	private JTable assignmentGrades;
 	
@@ -23,15 +24,14 @@ public class EnterGrades extends JPanel{
 	
 	private JLabel spacer_1, spacer_2;
 	
-	
-	
 	private JScrollPane classList, classRoster;
 	
-	private JButton btnCancelToHome, btnSaveAllGrades, btnShowClassRoster, btnShowStudentAssignments;
+	private JButton btnCancelToHome, btnPrintReport, btnShowClassRoster, btnGenerateReport;
 	
-	private String[] displayColumns = {"Assignment Name", "Assignment Type", "Points / Total", "Percentage", "Letter Grade"};
+	private String[] displayColumns = {"Student Name", "Points", 
+							"Possible Points", "Percentage", "Letter Grade", "Rank"};
 	
-	public EnterGrades(){
+	public GenerateReportFrame(){
 		
 		mainPanel = new JPanel();
 		topPanel = new JPanel();
@@ -43,7 +43,6 @@ public class EnterGrades extends JPanel{
 		classSelectPanel = new JPanel();
 		bottomNorthPanel = new JPanel();
 				
-		
 		spacer_1 = new JLabel("");
 		spacer_2 = new JLabel("");
 		
@@ -61,14 +60,15 @@ public class EnterGrades extends JPanel{
 		this.setLayout(new BorderLayout());
 		
 		btnCancelToHome = new JButton("Home Screen");
-		btnSaveAllGrades = new JButton("Save All Grades");
-		btnShowStudentAssignments = new JButton("Show Student Assignments");
+		btnPrintReport = new JButton("Print Report");
+		btnGenerateReport = new JButton("Show Student Assignments");
 		btnShowClassRoster = new JButton("Show Class Roster");
 		
 		//TEMPORARY CODE
+		//--------------------------------------------------------------------------
 		String[][] assignmentData = {
-				{"Quiz 1", "Quiz", "50 / 50", "100", "A"},
-				{"Homework 1", "Homework", "20/25", "80", "B"}
+				{"One, Student", "65", "100", "65%", "D", "2"},
+				{"Two, Student", "100", "100", "100%", "A", "1"}
 		};
 		
 		String[] listOfClasses = {"Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6"};
@@ -83,9 +83,11 @@ public class EnterGrades extends JPanel{
 		classList.setViewportView(list);
 		classRoster.setViewportView(list2);
 		
+		//---------------------------------------------------------------------------
+		
 		assignmentGrades = new JTable(assignmentData, displayColumns);
 		
-		homeButtonPanel.add(btnSaveAllGrades);
+		homeButtonPanel.add(btnPrintReport);
 		homeButtonPanel.add(btnCancelToHome);
 		
 		studentSelectPanel.add(classRoster);
@@ -101,7 +103,7 @@ public class EnterGrades extends JPanel{
 
 		tableScrollPane = new JScrollPane(assignmentGrades);
 		
-		bottomNorthPanel.add(btnShowStudentAssignments);
+		bottomNorthPanel.add(btnGenerateReport);
 		
 		bottomPanel.add(tableScrollPane, BorderLayout.CENTER);
 		bottomPanel.add(spacer_1, BorderLayout.EAST);
@@ -116,19 +118,20 @@ public class EnterGrades extends JPanel{
 		
 	}
 	
+
 	public void homeButtonActionListener(ActionListener hal){
 		btnCancelToHome.addActionListener(hal);
 	}
 	
-	public void saveActionListener(ActionListener sal){
-		btnSaveAllGrades.addActionListener(sal);
+	public void printActionListener(ActionListener pal){
+		btnPrintReport.addActionListener(pal);
 	}
 	
 	public void showClassActionListener(ActionListener scal){
 		btnShowClassRoster.addActionListener(scal);
 	}
 	
-	public void showAssignmentsActionListener(ActionListener saal){
-		btnShowStudentAssignments.addActionListener(saal);
+	public void generateReportActionListener(ActionListener gral){
+		btnGenerateReport.addActionListener(gral);
 	}
 }

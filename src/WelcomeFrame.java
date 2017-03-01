@@ -25,7 +25,6 @@ public class WelcomeFrame extends JPanel {
 		JLabel spacer = new JLabel("");
 		JLabel spacer_1 = new JLabel("");
 		JLabel spacer_2 = new JLabel("");
-		JLabel spacer_3 = new JLabel("");
 		JLabel spacer_4 = new JLabel("");
 		JLabel spacer_5 = new JLabel("");
 		JLabel spacer_6 = new JLabel("");
@@ -71,8 +70,6 @@ public class WelcomeFrame extends JPanel {
 		buttonPanel.add(spacer_1);
 		buttonPanel.add(btnManageClasses);
 		buttonPanel.add(spacer_2);
-		//buttonPanel.add(btnManageAssignments);
-		//buttonPanel.add(spacer_3);
 		buttonPanel.add(btnEnterGrades);
 		buttonPanel.add(spacer_4);
 		buttonPanel.add(btnGenerateReports);
