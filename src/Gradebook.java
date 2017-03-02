@@ -23,16 +23,34 @@ public class Gradebook extends JFrame{
 	private EnterGrades enterGrades;
 	private GenerateReportFrame reportPanel;
 	private NewStudentPopup newStudentPanel;
+	private EditStudentPopup editStudentPopup;
 	
 	
+	//Create the main application panel
+	//
 	private JPanel applicationPanel;
 		
 	
+	//Create the list models that will be used on each panel
+	//	studentList is used for a listing of students
+	//	courseList is used for a listing of courses
+	//	classList is used for a listing of classes
+	//
 	private DefaultListModel<Student> studentList;
+	private DefaultListModel<Course> courseList;
+	private DefaultListModel<CourseSection> classList;
 	
+	
+	//Create a student variable used for misc actions
+	//
 	private Student selectedStudent;
 	
+	
+	//Create the cardlayout used for swapping the currently
+	//	viewed panel
+	//
 	private CardLayout mainCL;
+	
 	
 	//String constants used for the card layout
 	//
@@ -44,6 +62,8 @@ public class Gradebook extends JFrame{
 							REPORTS = "generate reports";
 	
 	
+	//main method called at program start
+	//
 	public static void main(String args[]){
 		
 		//Run a new gradebook
@@ -53,8 +73,12 @@ public class Gradebook extends JFrame{
 	}
 	
 	
+	//New Gradebook constructor
+	//
 	public Gradebook(){
 
+		//Create the frame, with resolution 1024x768
+		//
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setBounds(100, 100, 1024, 768);
 		this.setLayout(new BorderLayout());
@@ -66,7 +90,6 @@ public class Gradebook extends JFrame{
 		welcome.manageStudentsActionListener(new ShowStudentCard());
 		welcome.manageClassesActionListener(new ShowClassesCard());
 		welcome.manageCoursesActionListener(new ShowCoursesCard());
-		welcome.manageAssignmentsActionListener(new ShowAssignmentsCard());
 		welcome.enterGradesActionListener(new ShowGradesCard());
 		welcome.generateReportsActionListener(new GenerateReportsCard());
 		
@@ -80,6 +103,7 @@ public class Gradebook extends JFrame{
 		manageStudents.homeButtonActionListener(new ShowWelcomeScreen());
 		manageStudents.newStudentActionListener(new CreateNewStudent());
 		manageStudents.deleteStudentActionListener(new DeleteStudent());
+		manageStudents.inactiveActionListener(new IncludeInactiveStudents());
 		
 		
 		//Create the manage classes frame and add action listeners
@@ -94,8 +118,7 @@ public class Gradebook extends JFrame{
 		manageClasses.showClassActionListener(new ManageShowClass());
 		manageClasses.submitChangesActionListener(new ManageSubmitChanges());
 
-		
-		
+				
 		//Create the manage courses frame and add action listeners
 		//	for each button
 		//
@@ -108,6 +131,7 @@ public class Gradebook extends JFrame{
 		manageCourses.showClassActionListener(new CoursesShowClass());
 		manageCourses.submitChangesActionListener(new CoursesSubmitChanges());
 		
+		
 		//Create the enter grades frame and add action listeners
 		//	for each button
 		//
@@ -117,6 +141,7 @@ public class Gradebook extends JFrame{
 		enterGrades.showClassActionListener(new GradesShowClass());
 		enterGrades.showAssignmentsActionListener(new GradesShowAssignments());
 		
+		
 		//Create the report panel and add action listeners for
 		//	each button
 		//
@@ -125,6 +150,7 @@ public class Gradebook extends JFrame{
 		reportPanel.printActionListener(new PrintReport());
 		reportPanel.showClassActionListener(new ReportsShowClass());
 		reportPanel.generateReportActionListener(new GenerateReport());
+		
 		
 		//Create the cardlayout, and initialize it with
 		//	each of the different panels.  Also set up the
@@ -144,7 +170,13 @@ public class Gradebook extends JFrame{
 		this.add(applicationPanel, BorderLayout.CENTER);
 		this.setVisible(true);
 		
+		
+		//Initialize each of the list models
+		//
 		studentList = new DefaultListModel<Student>();
+		courseList = new DefaultListModel<Course>();
+		classList = new DefaultListModel<CourseSection>();
+		
 		
 	}
 	
@@ -202,12 +234,9 @@ public class Gradebook extends JFrame{
 		}
 	};
 	
-	class ShowAssignmentsCard implements ActionListener{
-		public void actionPerformed(ActionEvent e){
-			
-		}
-	};
-	
+
+	//Show the enter grades frame
+	//
 	class ShowGradesCard implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			//Get the cardlayout from the applicationPanel, and 
@@ -218,6 +247,9 @@ public class Gradebook extends JFrame{
 		}
 	};
 	
+	
+	//Show the generate reports frame
+	//
 	class GenerateReportsCard implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			//Get the cardlayout from the applicationPanel, and 
@@ -228,15 +260,22 @@ public class Gradebook extends JFrame{
 		}
 	};
 	
+	
+	//Load student info from the list selection into the 
+	//	student detail pane on the right side
+	//
 	class LoadStudentInfo implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
 			//get currently selected member from the manage students panel
 			//
 			int currentSelectedStudent = manageStudents.getSelectedStudentIndex();
-			
 			selectedStudent = studentList.getElementAt(currentSelectedStudent);
 			
+			
+			//Connect to the database to load the rest of the student's info
+			//	into the selectedStudent variable
+			//
 			try{
 				Connection c = null;
 				Statement stmt = null;
@@ -266,8 +305,6 @@ public class Gradebook extends JFrame{
 				stmt.close();
 				c.close();
 				
-				manageStudents.displayStudentInfo(selectedStudent);
-				
 			}
 			
 			catch(Exception e1)
@@ -275,14 +312,182 @@ public class Gradebook extends JFrame{
 				System.err.println(e1);
 			}
 			
-		}
-	};
-	
-	class SubmitStudentChanges implements ActionListener{
-		public void actionPerformed(ActionEvent e){
+			//Update the detail pane with the currently selected student's information
+			//
+			manageStudents.displayStudentInfo(selectedStudent);
 			
 		}
 	};
+	
+	
+	//ActionListener for the include deleted students checkbox 
+	//	on the manage students page
+	//
+	class IncludeInactiveStudents implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			
+			//Clear the student list
+			//
+			studentList.removeAllElements();
+			
+			//If the checkbox is selected, run the method that loads ALL
+			//  If the checkbox is unchecked, run the method that only loads the 
+			//	students marked as active
+			//
+			if(manageStudents.includeInactive()){
+				loadAllStudentsFromDB();
+			}
+			
+			else{
+				loadStudentsFromDB();
+			}
+			
+			//Update the student list window
+			manageStudents.setStudentList(studentList);
+			
+		}
+	}
+	
+	
+	//Launch a popup window that contains the currently selected
+	//	student's information for editing
+	//
+	class SubmitStudentChanges implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			
+			try{
+				Connection c = null;
+				Statement stmt = null;
+				
+				Class.forName("org.sqlite.JDBC");
+				c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+				
+				
+				stmt = c.createStatement();
+				
+				//get currently selected member from the manage students panel
+				//
+				int currentSelectedStudent = manageStudents.getSelectedStudentIndex();
+				selectedStudent = studentList.getElementAt(currentSelectedStudent);
+				
+				ResultSet rs = stmt.executeQuery("SELECT * FROM student WHERE "
+						+ "id_num = '" + selectedStudent.getID() + "';");
+
+				while(rs.next()){
+					selectedStudent = new Student(Integer.parseInt(rs.getString("id_num")), 
+						rs.getString("first_name"), 
+						rs.getString("last_name"),
+						rs.getString("address"),
+						rs.getString("city"),
+						rs.getString("state"),
+						rs.getString("zip"),
+						rs.getString("dob"));
+
+				}
+				
+				rs.close();
+				stmt.close();
+				c.close();
+				
+				
+				//Update the detail page to show the currently selected
+				//	student detail
+				//
+				manageStudents.displayStudentInfo(selectedStudent);
+				
+				
+				//Launch a new popup window that contains the currently
+				//	selected student's information
+				//
+				editStudentPopup = new EditStudentPopup(selectedStudent);
+				editStudentPopup.submitActionListener(new EditSubmitChanges());
+				
+						
+			}
+			
+			
+			catch(Exception e1)
+			{
+				System.err.println(e1);
+			}
+			
+			
+		}
+	};
+	
+	
+	//Submit changes button on the edit student popup window
+	//
+	class EditSubmitChanges implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			
+			//Prompt the user for confirmation
+			//
+			if(confirmationDialog("Are you sure you want to modify the student record?\nThis will activate inactive students")){
+				
+				
+				try{
+					Connection c = null;
+					Statement stmt = null;
+						
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+							
+					stmt = c.createStatement();
+					
+					
+					//Create a new (temporary) student with the information from
+					//	the edit window
+					//
+					Student modifyStudent = editStudentPopup.newStudent();
+					
+					
+					//Update the student in the database with all of the new information
+					//	the id_num is used for matching the student being edited
+					//	with the student in the db
+					//
+					stmt.executeUpdate("UPDATE student SET " +
+										"first_name = '" + modifyStudent.getFirst() + "', " +
+										"last_name = '" + modifyStudent.getLast() + "', " +
+										"address = '" + modifyStudent.getAddress() + "', " +
+										"city = '" + modifyStudent.getCity() + "', " +
+										"state = '" + modifyStudent.getState() + "', " +
+										"zip = '" + modifyStudent.getZip() + "', " +
+										"dob = '" + modifyStudent.getDOB() + "', " +
+										"active = 1 " +
+										"WHERE id_num = '" + modifyStudent.getID() + "';");	
+					
+					stmt.close();
+					c.close();
+				
+					//Clear the student list
+					//
+					studentList.removeAllElements();
+					
+					//get the list of students from the database and re-populate the studentList
+					//
+					loadStudentsFromDB();
+					
+					//Update the student list window
+					manageStudents.setStudentList(studentList);
+					
+				}
+				
+				
+				catch(Exception e1)
+				{
+					System.err.println(e1);
+				}		
+			}
+			
+			else{
+				
+				
+			}
+			
+			editStudentPopup.dispose();
+		}
+	}
 	
 	
 	//Show the welcome screen/home page
@@ -343,17 +548,17 @@ public class Gradebook extends JFrame{
 			Connection c = null;
 			Statement stmt = null;
 			
-			
-			//Connect to the database
-			try{
-				Class.forName("org.sqlite.JDBC");
-				c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
-				stmt = c.createStatement();
+			if(confirmationDialog("Are you sure you want to add this student?")){
+				//Connect to the database
+				try{
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+					stmt = c.createStatement();
 		
 				
-				//Insert into the database the new student information
-				//
-				stmt.executeUpdate("INSERT INTO student (first_name, last_name, address, city, state, zip, dob) VALUES ('"
+					//Insert into the database the new student information
+					//
+					stmt.executeUpdate("INSERT INTO student (first_name, last_name, address, city, state, zip, dob) VALUES ('"
 							+ newStudent.getFirst() + "', '"
 							+ newStudent.getLast() + "', '"
 							+ newStudent.getAddress() + "', '"
@@ -363,28 +568,30 @@ public class Gradebook extends JFrame{
 							+ newStudent.getDOB() + "');");
 				
 			
-				stmt.close();
-				c.close();
+					stmt.close();
+					c.close();
 				
-				//Close the new student popup
-				//
-				newStudentPanel.dispose();
+					//Close the new student popup
+					//
+					newStudentPanel.dispose();
 				
-				//Clear the student list
-				//
-				studentList.removeAllElements();
+					//Clear the student list
+					//
+					studentList.removeAllElements();
 				
-				//get the list of students from the database and re-populate the studentList
-				//
-				loadStudentsFromDB();
-				
-				//Update the student list window
-				manageStudents.setStudentList(studentList);
-			}
+					//get the list of students from the database and re-populate the studentList
+					//
+					loadStudentsFromDB();
+					
+					//Update the student list window
+					manageStudents.setStudentList(studentList);
+					
+				}
 			
-			catch(Exception e2){
-				System.err.println(e2);
+				catch(Exception e2){
+					System.err.println(e2);
 				
+				}
 			}
 		}
 	}
@@ -393,6 +600,55 @@ public class Gradebook extends JFrame{
 	class DeleteStudent implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			try{
+			
+				//get currently selected member from the manage students panel
+				//
+				int currentSelectedStudent = manageStudents.getSelectedStudentIndex();
+				
+				selectedStudent = studentList.getElementAt(currentSelectedStudent);
+				
+				manageStudents.displayStudentInfo(selectedStudent);
+				
+				
+				//Present popup window, and if the user selects yes, remove the currently
+				//	selected member from the db
+				//
+				if(confirmationDialog("Are you sure you want to delete this student?")){
+				
+					Connection c = null;
+					Statement stmt = null;
+					
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+					
+					
+					stmt = c.createStatement();
+					stmt.executeUpdate("UPDATE student SET active = 0 WHERE id_num = '" + 
+										selectedStudent.getID() + "';");	
+				
+					stmt.close();
+					c.close();
+			
+					//Clear the student list
+					//
+					studentList.removeAllElements();
+				
+					//get the list of students from the database and re-populate the studentList
+					//
+					loadStudentsFromDB();
+				
+					//Update the student list window
+					manageStudents.setStudentList(studentList);
+				
+				}
+			}
+			
+			
+			catch(Exception e1)
+			{
+				System.err.println(e1);
+			}
 		}
 	}
 	
@@ -501,6 +757,10 @@ public class Gradebook extends JFrame{
 		}
 	}
 	
+	
+	//Connect to the database and load the student list.  Only include active students
+	//	and only fetch their first name, last name, and id number
+	//
 	public boolean loadStudentsFromDB(){
 		
 		try{
@@ -528,6 +788,8 @@ public class Gradebook extends JFrame{
 			stmt.close();
 			c.close();
 			
+			manageStudents.setInactiveCheckbox(false);
+			
 			return true;
 		}
 		
@@ -537,6 +799,62 @@ public class Gradebook extends JFrame{
 			
 			return false;
 		}
+		
+	}
+	
+	//Connect to the database and load the student list.  Only include active students
+	//	and only fetch their first name, last name, and id number
+	//
+	public boolean loadAllStudentsFromDB(){
+			
+		try{
+			Connection c = null;
+			Statement stmt = null;
+				
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+				
+				
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT id_num, last_name, first_name, active FROM student ORDER BY last_name asc;");
+			
+			while(rs.next()){
+				studentList.addElement(
+						new Student(Integer.parseInt(rs.getString("id_num")), 
+											rs.getString("first_name"), 
+											rs.getString("last_name")));
+			}
+				
+			rs.close();
+			stmt.close();
+			c.close();
+				
+			return true;
+		}
+		
+		catch(Exception e){
+				
+			System.err.println(e);
+				
+			return false;
+		}
+			
+	}
+	
+	
+	//Create a popup window with the message in it.  If the user selects
+	//	yes, return true, if they select no return false
+	//
+	public boolean confirmationDialog(String message){
+		
+		int decision = JOptionPane.showConfirmDialog(this.getContentPane(), message, "Confirm", JOptionPane.YES_NO_OPTION);
+		
+		if(decision == 1){
+			return false;
+		}
+		
+		else
+			return true;
 		
 	}
 	

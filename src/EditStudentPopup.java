@@ -8,7 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 
-public class NewStudentPopup extends JFrame{
+public class EditStudentPopup extends JFrame{
 
 	private static final long serialVersionUID = 1L;
 
@@ -18,20 +18,25 @@ public class NewStudentPopup extends JFrame{
 	
 	private JTextField txtFirstName, txtLastName, txtAddress, txtCity, txtState, txtZip, txtDOB;
 	
-	public NewStudentPopup(){
+	private Student student;
+	
+	public EditStudentPopup(Student existingStudent){
+		
+		student = existingStudent;
+		
 		mainPanel = new JPanel();
 		leftPanel = new JPanel();
 		rightPanel = new JPanel();
 				
-		txtFirstName = new JTextField("First Name");
-		txtLastName = new JTextField("Last Name");
-		txtAddress = new JTextField("Address");
-		txtCity = new JTextField("City");
-		txtState = new JTextField("State");
-		txtZip = new JTextField("12345");
-		txtDOB = new JTextField("DOB");
+		txtFirstName = new JTextField(student.getFirst());
+		txtLastName = new JTextField(student.getLast());
+		txtAddress = new JTextField(student.getAddress());
+		txtCity = new JTextField(student.getCity());
+		txtState = new JTextField(student.getState());
+		txtZip = new JTextField(student.getZip() + "");
+		txtDOB = new JTextField(student.getDOB());
 		
-		btnSubmit = new JButton("Add new student");
+		btnSubmit = new JButton("Submit Changes to student");
 		
 		leftPanel.setLayout(new GridLayout(0,1));
 		leftPanel.add(new JLabel("First Name:"));
@@ -57,7 +62,7 @@ public class NewStudentPopup extends JFrame{
 		
 		
 		this.setBounds(250, 250, 640, 480);
-		this.setTitle("Add New Student");
+		this.setTitle("Edit Existing Student");
 		this.setLayout(new BorderLayout());
 		this.add(mainPanel, BorderLayout.CENTER);
 		this.add(btnSubmit, BorderLayout.SOUTH);
@@ -70,10 +75,11 @@ public class NewStudentPopup extends JFrame{
 	}
 	
 	
-	//Create a new student from the provided information
+	//Create a new student from the provided information with a matching id_num
+	//	from the student provided
 	//
 	public Student newStudent(){
-		return new Student(123, txtFirstName.getText(), txtLastName.getText(), txtAddress.getText(), txtCity.getText(),
+		return new Student(student.getID(), txtFirstName.getText(), txtLastName.getText(), txtAddress.getText(), txtCity.getText(),
 				txtState.getText(), txtZip.getText(), txtDOB.getText());
 	}
 }

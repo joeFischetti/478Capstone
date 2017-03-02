@@ -5,6 +5,8 @@ import java.awt.GridLayout;
 import javax.swing.JScrollPane;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+
 import java.awt.event.ActionListener;
 import javax.swing.JList;
 import javax.swing.JLabel;
@@ -22,6 +24,8 @@ public class ManageStudentsFrame extends JPanel {
 						txtCity, txtState, txtZip, txtAddress, txtDob;
 	
 	private JList<Student> list;
+	
+	private JCheckBox includeInactive;
 	
 	private JButton btnLoadStudentInfo, btnSubmitAboveChanges, btnCancelToHome, btnNewStudent, btnDeleteStudent;
 
@@ -65,7 +69,9 @@ public class ManageStudentsFrame extends JPanel {
 		txtZip = new JTextField();
 		txtDob = new JTextField();
 		
-	
+		includeInactive = new JCheckBox("Show Inactive");
+		includeInactive.setSelected(false);
+		
 		//Set each panel's layout
 		//
 		mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -81,7 +87,7 @@ public class ManageStudentsFrame extends JPanel {
 		//Create the buttons that are used on the panel.
 		//
 		btnLoadStudentInfo = new JButton("Show Student Info >>>");
-		btnSubmitAboveChanges = new JButton("<<< Store Student info");
+		btnSubmitAboveChanges = new JButton("Modify Student info");
 		btnCancelToHome = new JButton("Home Screen");
 		btnNewStudent = new JButton("Add New Student");
 		btnDeleteStudent = new JButton("Delete Selected Student");
@@ -124,6 +130,7 @@ public class ManageStudentsFrame extends JPanel {
 		//
 		leftContentPanel.add(scrollPane_1);
 		
+		leftButtonPanel.add(includeInactive);
 		leftButtonPanel.add(btnNewStudent);
 		leftButtonPanel.add(btnLoadStudentInfo);
 		
@@ -193,6 +200,10 @@ public class ManageStudentsFrame extends JPanel {
 		
 	}
 	
+	public void inactiveActionListener(ActionListener ial){
+		includeInactive.addActionListener(ial);
+	}
+	
 	public int getSelectedStudentIndex(){
 		return list.getSelectedIndex();
 	}
@@ -208,5 +219,13 @@ public class ManageStudentsFrame extends JPanel {
 		txtZip.setText(selected.getZip() + "");
 		txtDob.setText(selected.getDOB());
 		
+	}
+	
+	public boolean includeInactive(){
+		return includeInactive.isSelected();
+	}
+	
+	public void setInactiveCheckbox(boolean input){
+		includeInactive.setSelected(input);
 	}
 }
