@@ -1,12 +1,14 @@
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 
@@ -19,12 +21,13 @@ public class ManageCourseList extends JPanel{
 
 	private JTextField txtCourseNumber, txtCourseName, txtCourseDescription, txtMaxStudents, txtMeetingDay;
 
-	private JButton btnDeleteCourse, btnLoadCourseInfo, btnSubmitAboveChanges, btnCancelToHome, btnNewAssignment,
-			btnDeleteAssignment, btnAddCourse;
+	private JButton btnDeleteCourse, btnLoadCourseInfo, btnModCourse, btnCancelToHome, btnNewAssignment,
+			btnDeleteAssignment, btnModAssignment, btnAddCourse;
 
 	private JScrollPane courseList, assignmentList;
 	
-
+	private JList<Course> list;
+	private JList<Assignment> list2;
 
 	public ManageCourseList(){
 		//Create each of the panels
@@ -84,21 +87,21 @@ public class ManageCourseList extends JPanel{
 		btnDeleteCourse = new JButton("Delete Selected Course");
 		btnAddCourse = new JButton("Add New Course");
 		btnLoadCourseInfo = new JButton("Show Course Info >>>");
-		btnSubmitAboveChanges = new JButton("<<< Store Course info");
+		btnModCourse = new JButton("Modify Course Info");
 		btnCancelToHome = new JButton("Home Screen");
 		btnNewAssignment = new JButton("Create Assignment");
-		btnDeleteAssignment = new JButton("Delete Selected Assignment");
+		btnDeleteAssignment = new JButton("Delete Selected");
+		btnModAssignment = new JButton("Modify Selected");
 
 						
-		//TEMPORARY CODE*******************
-		String[] listOfCourses = {"Course 1", "Course 2", "Course 3", "Course 4", "Course 5", "Course 6"};
-		String[] listOfAssignments = {"Assignment1", "Assignment 2", "Assignment 3"};
-				
 		courseList = new JScrollPane();
 		assignmentList = new JScrollPane();
 						
-		JList<String> list = new JList<String>(listOfCourses);
-		JList<String> list2 = new JList<String>(listOfAssignments);
+		list = new JList<Course>();
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		list2 = new JList<Assignment>();
+		list2.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 				
 		courseList.setViewportView(list);
 		assignmentList.setViewportView(list2);
@@ -139,13 +142,14 @@ public class ManageCourseList extends JPanel{
 		rightClassInfoPanel.add(lblMaxStudents);
 		rightClassInfoPanel.add(txtMaxStudents);
 				
-		rightButtonPanel.add(btnSubmitAboveChanges);
+		rightButtonPanel.add(btnModCourse);
 		rightButtonPanel.add(btnDeleteCourse);
 					
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
 		leftPanel.add(leftButtonPanel, BorderLayout.SOUTH);
 		
 		assignmentButtonsPanel.add(btnNewAssignment);
+		assignmentButtonsPanel.add(btnModAssignment);
 		assignmentButtonsPanel.add(btnDeleteAssignment);
 
 		rightAssignmentListPanel.add(assignmentList);
@@ -181,19 +185,63 @@ public class ManageCourseList extends JPanel{
 		btnDeleteAssignment.addActionListener(daal);
 	}
 	
+	public void modAssignmentActionListener(ActionListener maal){
+		btnModAssignment.addActionListener(maal);
+	}
+	
 	public void addAssignmentActionListener(ActionListener aaal){
 		btnNewAssignment.addActionListener(aaal);
 	}
 	
-	public void showClassActionListener(ActionListener scal){
+	public void showCourseActionListener(ActionListener scal){
 		btnLoadCourseInfo.addActionListener(scal);
 	}
 			
-	public void submitChangesActionListener(ActionListener sal){
-		btnSubmitAboveChanges.addActionListener(sal);
+	public void modCourseActionListener(ActionListener sal){
+		btnModCourse.addActionListener(sal);
 	}
 			
 	public void homeButtonActionListener(ActionListener hal){
 		btnCancelToHome.addActionListener(hal);
+	}
+	
+	public void setCourseList(DefaultListModel<Course> courses){
+		list.setModel(courses);
+		
+	}
+	
+	public int getSelectedCourseIndex(){
+		return list.getSelectedIndex();
+	}
+	
+	public int getSelectedAssignmentIndex(){
+		return list2.getSelectedIndex();
+	}
+	
+	public void displayCourseInfo(Course selected){
+		
+		txtCourseNumber.setText(selected.getNUM());
+		txtCourseName.setText(selected.getName());
+		txtCourseDescription.setText(selected.getDesc());
+		txtMaxStudents.setText(selected.getMax() + "");
+		txtMeetingDay.setText(selected.getDay());
+		
+	}
+	
+	public void setAssignmentList(DefaultListModel<Assignment> assignments){
+		list2.setModel(assignments);
+		
+	}
+	
+	public void resetDisplay(){
+		
+		list2.setModel(new DefaultListModel<Assignment>());
+		
+		txtCourseNumber.setText("Course Number");
+		txtCourseName.setText("Course Name");
+		txtCourseDescription.setText("Course Description");
+		txtMaxStudents.setText("Max Students");
+		txtMeetingDay.setText("Meeting Day");
+		
 	}
 }

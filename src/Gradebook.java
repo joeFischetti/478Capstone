@@ -1,5 +1,6 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import javax.swing.*;
@@ -24,6 +25,10 @@ public class Gradebook extends JFrame{
 	private GenerateReportFrame reportPanel;
 	private NewStudentPopup newStudentPanel;
 	private EditStudentPopup editStudentPopup;
+	private NewAssignmentPopup newAssignmentPopup;
+	private NewCoursePopup newCoursePopup;
+	private EditCoursePopup editCoursePopup;
+	private EditAssignmentPopup editAssignmentPopup;
 	
 	
 	//Create the main application panel
@@ -35,15 +40,24 @@ public class Gradebook extends JFrame{
 	//	studentList is used for a listing of students
 	//	courseList is used for a listing of courses
 	//	classList is used for a listing of classes
+	//	assignmentList is used to list the assignments for a given course
+	//	assignmentTypeList is a list of assignment types
 	//
 	private DefaultListModel<Student> studentList;
 	private DefaultListModel<Course> courseList;
 	private DefaultListModel<CourseSection> classList;
+	private DefaultListModel<Assignment> assignmentList;
+	private DefaultListModel<AssignmentType> assignmentTypeList;
 	
 	
 	//Create a student variable used for misc actions
 	//
 	private Student selectedStudent;
+	
+	
+	//Create a course variable
+	//
+	private Course selectedCourse;
 	
 	
 	//Create the cardlayout used for swapping the currently
@@ -128,9 +142,9 @@ public class Gradebook extends JFrame{
 		manageCourses.addCourseActionListener(new AddCourse());
 		manageCourses.deleteAssignmentActionListener(new DeleteAssignment());
 		manageCourses.addAssignmentActionListener(new AddAssignment());
-		manageCourses.showClassActionListener(new CoursesShowClass());
-		manageCourses.submitChangesActionListener(new CoursesSubmitChanges());
-		
+		manageCourses.showCourseActionListener(new LoadCourseInfo());
+		manageCourses.modCourseActionListener(new ModifyCourse());
+		manageCourses.modAssignmentActionListener(new ModifyAssignment());
 		
 		//Create the enter grades frame and add action listeners
 		//	for each button
@@ -167,6 +181,7 @@ public class Gradebook extends JFrame{
 		
 		
 		//Add the main panel to the center of the screen and set visible
+		//
 		this.add(applicationPanel, BorderLayout.CENTER);
 		this.setVisible(true);
 		
@@ -176,6 +191,8 @@ public class Gradebook extends JFrame{
 		studentList = new DefaultListModel<Student>();
 		courseList = new DefaultListModel<Course>();
 		classList = new DefaultListModel<CourseSection>();
+		assignmentList = new DefaultListModel<Assignment>();
+		assignmentTypeList = new DefaultListModel<AssignmentType>();
 		
 		
 	}
@@ -196,7 +213,7 @@ public class Gradebook extends JFrame{
 			//
 			studentList.removeAllElements();
 			
-			//get the list of students from the database and repopulate the studentList
+			//get the list of students from the database and populate the studentList
 			//
 			loadStudentsFromDB();
 			
@@ -231,6 +248,18 @@ public class Gradebook extends JFrame{
 			//
 			CardLayout cl = (CardLayout)applicationPanel.getLayout();
 			cl.show(applicationPanel, MANAGECOURSES);
+			
+			//Clear the course list
+			//
+			courseList.removeAllElements();
+			
+			//get the list of students from the database and repopulate the studentList
+			//
+			loadCoursesFromDB();
+			
+			//Update the student list window
+			manageCourses.setCourseList(courseList);
+			
 		}
 	};
 	
@@ -281,7 +310,7 @@ public class Gradebook extends JFrame{
 				Statement stmt = null;
 				
 				Class.forName("org.sqlite.JDBC");
-				c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+				c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 				
 				
 				stmt = c.createStatement();
@@ -320,6 +349,63 @@ public class Gradebook extends JFrame{
 	};
 	
 	
+	
+	class LoadCourseInfo implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			
+			//get currently selected member from the manage students panel
+			//
+			int currentSelectedCourse = manageCourses.getSelectedCourseIndex();
+			selectedCourse = courseList.getElementAt(currentSelectedCourse);
+			
+			
+			//Connect to the database to load the rest of the student's info
+			//	into the selectedStudent variable
+			//
+			try{
+				Connection c = null;
+				Statement stmt = null;
+				
+				Class.forName("org.sqlite.JDBC");
+				c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+				
+				
+				stmt = c.createStatement();
+				ResultSet rs = stmt.executeQuery("SELECT * FROM course WHERE "
+											+ "course_num = '" + selectedCourse.getNUM() + "';");
+			
+				while(rs.next()){
+					selectedCourse = new Course(rs.getString("course_num"), 
+											rs.getString("name"), 
+											rs.getString("description"),
+											rs.getString("max_stu"),
+											rs.getString("day"));
+				
+				}
+				
+				
+				rs.close();
+				stmt.close();
+				c.close();
+				
+			}
+			
+			catch(Exception e1)
+			{
+				System.err.println(e1);
+			}
+			
+			//Update the detail pane with the currently selected student's information
+			//
+			manageCourses.displayCourseInfo(selectedCourse);
+			loadAssignmentsForCourse();
+			
+			
+		}
+	}
+	
+	
+	
 	//ActionListener for the include deleted students checkbox 
 	//	on the manage students page
 	//
@@ -347,8 +433,8 @@ public class Gradebook extends JFrame{
 			
 		}
 	}
-	
-	
+
+
 	//Launch a popup window that contains the currently selected
 	//	student's information for editing
 	//
@@ -360,7 +446,7 @@ public class Gradebook extends JFrame{
 				Statement stmt = null;
 				
 				Class.forName("org.sqlite.JDBC");
-				c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+				c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 				
 				
 				stmt = c.createStatement();
@@ -431,7 +517,7 @@ public class Gradebook extends JFrame{
 					Statement stmt = null;
 						
 					Class.forName("org.sqlite.JDBC");
-					c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 							
 					stmt = c.createStatement();
 					
@@ -500,6 +586,8 @@ public class Gradebook extends JFrame{
 			//
 			CardLayout cl = (CardLayout)applicationPanel.getLayout();
 			cl.show(applicationPanel, WELCOME);
+			
+			manageStudents.resetDisplay();
 		}
 	};
 	
@@ -552,7 +640,7 @@ public class Gradebook extends JFrame{
 				//Connect to the database
 				try{
 					Class.forName("org.sqlite.JDBC");
-					c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 					stmt = c.createStatement();
 		
 				
@@ -620,7 +708,7 @@ public class Gradebook extends JFrame{
 					Statement stmt = null;
 					
 					Class.forName("org.sqlite.JDBC");
-					c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 					
 					
 					stmt = c.createStatement();
@@ -719,41 +807,364 @@ public class Gradebook extends JFrame{
 	class DeleteCourse implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+try{
+				
+				//get currently selected member from the manage students panel
+				//
+				int currentSelectedCourse = manageCourses.getSelectedCourseIndex();
+				
+				Course selectedCourse = courseList.getElementAt(currentSelectedCourse);
+				
+				
+				
+				//Present popup window, and if the user selects yes, remove the currently
+				//	selected member from the db
+				//
+				if(confirmationDialog("Are you sure you want to delete this assignment?")){
+				
+					Connection c = null;
+					Statement stmt = null;
+					
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					
+					
+					stmt = c.createStatement();
+					stmt.executeUpdate("UPDATE course SET active = 0 "
+										+ "WHERE course_num = '" + selectedCourse.getNUM() + "';");
+	
+				
+					stmt.close();
+					c.close();
+			
+					//Clear the student list
+					//
+					courseList.removeAllElements();
+				
+					//get the list of students from the database and re-populate the studentList
+					//
+					loadCoursesFromDB();
+				
+					//Update the student list window
+					manageCourses.resetDisplay();
+					manageCourses.setCourseList(courseList);
+					
+				
+				}
+			}
+			
+			catch(Exception e1)
+			{
+				System.err.println(e1);
+			}
+			
+			
 		}
 	}
 	
 	
 	class AddCourse implements ActionListener{
 		public void actionPerformed(ActionEvent e){
-			
+			newCoursePopup = new NewCoursePopup();
+			newCoursePopup.submitActionListener(new SubmitNewCourse());
 		}
 	}
 	
+	class SubmitNewCourse implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			if(confirmationDialog("Are you sure you wish to create this new course?")){
+				
+				Course newCourse = newCoursePopup.newCourse();
+				
+				Connection c = null;
+				Statement stmt = null;
+				
+				
+				try{
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					stmt = c.createStatement();
+		
+				
+					//Insert into the database the new student information
+					//
+					stmt.executeUpdate("INSERT INTO course (course_num, name, description, max_stu, day) VALUES ('"
+							+ newCourse.getNUM() + "', '"
+							+ newCourse.getName() + "', '"
+							+ newCourse.getDesc() + "', '"
+							+ newCourse.getMax() + "', '"
+							+ newCourse.getDay() + "');");
+				
+			
+					stmt.close();
+					c.close();
+				
+					newCoursePopup.dispose();
+					courseList.removeAllElements();
+					loadCoursesFromDB();
+					manageCourses.setCourseList(courseList);
+				}
+			
+				catch(Exception e2){
+					System.err.println(e2);
+				
+				}
+				
+				
+				
+			}
+		}
+	}
 	
 	class DeleteAssignment implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			try{
+				
+				//get currently selected member from the manage students panel
+				//
+				int currentSelectedAssignment = manageCourses.getSelectedAssignmentIndex();
+				
+				Assignment selectedAssignment = assignmentList.getElementAt(currentSelectedAssignment);
+				
+				
+				
+				//Present popup window, and if the user selects yes, remove the currently
+				//	selected member from the db
+				//
+				if(confirmationDialog("Are you sure you want to delete this assignment?")){
+				
+					Connection c = null;
+					Statement stmt = null;
+					
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					
+					
+					stmt = c.createStatement();
+					stmt.executeUpdate("UPDATE assignment SET active = 0 "
+										+ "WHERE name = '" + selectedAssignment.getName() + "'"
+										+ " AND course = '" + selectedAssignment.getCourse() +  "';");	
+				
+					stmt.close();
+					c.close();
 			
+					//Clear the student list
+					//
+					assignmentList.removeAllElements();
+				
+					//get the list of students from the database and re-populate the studentList
+					//
+					loadAssignmentsForCourse();
+				
+					//Update the student list window
+					manageCourses.setAssignmentList(assignmentList);
+				
+				}
+			}
+			
+			catch(Exception e1)
+			{
+				System.err.println(e1);
+			}
 		}
 	}
 	
 	
 	class AddAssignment implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			loadAssignmentTypes();
+			newAssignmentPopup = new NewAssignmentPopup(courseList, assignmentTypeList);
+			newAssignmentPopup.submitActionListener(new SubmitAssignment());
+		}
+	}
+	
+	class SubmitAssignment implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			//Get a new student object from the popup window
+			//
+			Assignment newAssignment = newAssignmentPopup.newAssignment();
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			if(confirmationDialog("Are you sure you want to create this assignment?")){
+				//Connect to the database
+				try{
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					stmt = c.createStatement();
+		
+				
+					//Insert into the database the new student information
+					//
+					stmt.executeUpdate("INSERT INTO assignment (name, course, type_num, total_points, description) VALUES ('"
+							+ newAssignment.getName() + "', '"
+							+ newAssignment.getCourse() + "', '"
+							+ newAssignment.getType() + "', '"
+							+ newAssignment.getPoints() + "', '"
+							+ newAssignment.getDescription() + "');");
+				
+			
+					stmt.close();
+					c.close();
+				
+					//Close the new student popup
+					//
+					newAssignmentPopup.dispose();
+				
+					loadAssignmentsForCourse();
+					
+				}
+			
+				catch(Exception e2){
+					System.err.println(e2);
+				
+				}
+			}
+			
+			
 			
 		}
 	}
 	
 	
-	class CoursesShowClass implements ActionListener{
+	class ModifyCourse implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			int courseSelected = manageCourses.getSelectedCourseIndex();
+			Course currentCourse = courseList.getElementAt(courseSelected);
 			
+			
+			editCoursePopup = new EditCoursePopup(currentCourse);
+			editCoursePopup.submitActionListener(new SubmitCourseChanges());
 		}
 	}
 	
-	
-	class CoursesSubmitChanges implements ActionListener{
+	class SubmitCourseChanges implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			//Prompt the user for confirmation
+			//
+			if(confirmationDialog("Are you sure you want to modify the course details?")){
+				
+				
+				try{
+					Connection c = null;
+					Statement stmt = null;
+						
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+							
+					stmt = c.createStatement();
+					
+					
+					Course newCourse = editCoursePopup.newCourse();
+					
+					
+					//Update the student in the database with all of the new information
+					//	the id_num is used for matching the student being edited
+					//	with the student in the db
+					//
+					stmt.executeUpdate("UPDATE course SET " +
+										"name = '" + newCourse.getName() + "', " +
+										"description = '" + newCourse.getDesc() + "', " +
+										"max_stu = '" + newCourse.getMax() + "', " +
+										"day = '" + newCourse.getDay() + "', " +
+										"active = 1 " +
+										"WHERE course_num = '" + newCourse.getNUM() + "';");	
+					
+					stmt.close();
+					c.close();
+				
+					//Clear the student list
+					//
+					courseList.removeAllElements();
+					
+					//get the list of students from the database and re-populate the studentList
+					//
+					loadCoursesFromDB();
+					
+					//Update the student list window
+					manageCourses.setCourseList(courseList);
+					manageCourses.resetDisplay();
+					
+					editCoursePopup.dispose();
+					
+				}
+				
+				
+				catch(Exception e1)
+				{
+					System.err.println(e1);
+				}		
+			}
+		}
+	}
+	
+	class ModifyAssignment implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			int assignmentSelected = manageCourses.getSelectedAssignmentIndex();
+			Assignment currentAssignment = assignmentList.getElementAt(assignmentSelected);
 			
+			editAssignmentPopup = new EditAssignmentPopup(courseList, assignmentTypeList, currentAssignment);
+			editAssignmentPopup.submitActionListener(new SubmitAssignmentChanges());
+		}
+	}
+	
+	class SubmitAssignmentChanges implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			//Prompt the user for confirmation
+			//
+			if(confirmationDialog("Are you sure you want to modify the course details?")){
+				
+				Assignment newAssignment = editAssignmentPopup.newAssignment();
+				
+				try{
+					Connection c = null;
+					Statement stmt = null;
+						
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+							
+					stmt = c.createStatement();
+					
+					
+					
+					
+					
+					//Update the student in the database with all of the new information
+					//	the id_num is used for matching the student being edited
+					//	with the student in the db
+					//
+					stmt.executeUpdate("UPDATE assignment SET " +
+										"total_points = '" + newAssignment.getPoints() + "', " +
+										"description = '" + newAssignment.getDescription() + "', " +
+										"active = 1 " +
+										"WHERE name = '" + newAssignment.getName() + "' AND " +
+										"assignment_id = '" + newAssignment.getID() + "' AND " +
+										"course = '" + newAssignment.getCourse() + "';");	
+					
+					stmt.close();
+					c.close();
+				
+					//Clear the student list
+					//
+					assignmentList.removeAllElements();
+					
+								
+					//Update the student list window
+					manageCourses.setAssignmentList(assignmentList);
+					manageCourses.resetDisplay();
+					
+					editAssignmentPopup.dispose();
+					
+				}
+				
+				
+				catch(Exception e1)
+				{
+					System.err.println(e1);
+					
+				}		
+			}
 		}
 	}
 	
@@ -768,7 +1179,7 @@ public class Gradebook extends JFrame{
 			Statement stmt = null;
 			
 			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 			
 			
 			stmt = c.createStatement();
@@ -812,7 +1223,7 @@ public class Gradebook extends JFrame{
 			Statement stmt = null;
 				
 			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:bin/Capstone");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 				
 				
 			stmt = c.createStatement();
@@ -842,6 +1253,46 @@ public class Gradebook extends JFrame{
 	}
 	
 	
+	public boolean loadCoursesFromDB(){
+		
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM course;");
+		
+			while(rs.next()){
+				if(Integer.parseInt(rs.getString("active")) == 1){
+				courseList.addElement(
+						new Course(rs.getString("course_num"),
+									rs.getString("name"),
+									rs.getString("description"),
+									rs.getString("max_stu"),
+									rs.getString("day")));
+				}
+			}
+			
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+	}
+	
 	//Create a popup window with the message in it.  If the user selects
 	//	yes, return true, if they select no return false
 	//
@@ -855,6 +1306,104 @@ public class Gradebook extends JFrame{
 		
 		else
 			return true;
+		
+	}
+	
+	
+	//Load the assignments from the database for the currently selected course
+	//
+	public boolean loadAssignmentsForCourse(){
+		
+		assignmentList.removeAllElements();
+			
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT assignment_id, name, course, type_num, total_points, assignment.description, assignment.active "
+							+ "FROM assignment, assignment_type " 
+							+ "WHERE assignment.course = '"
+							+ selectedCourse.getNUM() + "' "
+							+ "AND assignment.type_num = assignment_type.num;");
+		
+			
+			while(rs.next()){
+				if(Integer.parseInt(rs.getString("active")) == 1){
+					assignmentList.addElement(
+						new Assignment(	Integer.parseInt(rs.getString("assignment_id")),
+										rs.getString("name"),
+										rs.getString("course"),
+										rs.getString("description"),
+										Integer.parseInt(rs.getString("type_num")),
+										Integer.parseInt(rs.getString("total_points"))));
+				}
+			}
+			
+					
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			manageCourses.setAssignmentList(assignmentList);
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+	}
+	
+public boolean loadAssignmentTypes(){
+		
+		assignmentTypeList.removeAllElements();
+			
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM assignment_type;");
+		
+			
+						
+			while(rs.next()){
+				assignmentTypeList.addElement(
+						new AssignmentType(Integer.parseInt(rs.getString("num")),
+										rs.getString("description")));
+			}
+			
+					
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
 		
 	}
 	

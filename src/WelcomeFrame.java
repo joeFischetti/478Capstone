@@ -1,8 +1,15 @@
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import java.awt.GridLayout;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
 import javax.swing.JLabel;
 
 public class WelcomeFrame extends JPanel {
@@ -16,9 +23,10 @@ public class WelcomeFrame extends JPanel {
 	private JPanel mainPanel, middleThird, buttonPanel;
 	private JButton btnManageStudents, btnManageClasses, btnManageCourses, btnManageAssignments,
 				btnEnterGrades, btnGenerateReports;
+	private BufferedImage logo;
 	
 	
-	public WelcomeFrame() {
+	public WelcomeFrame(){
 		
 		//Create the spacer JLabels for setting up component positioning
 		//
@@ -48,7 +56,6 @@ public class WelcomeFrame extends JPanel {
 		btnEnterGrades = new JButton("Enter Grades");
 		btnGenerateReports = new JButton("Generate Reports");
 		btnManageAssignments = new JButton("Manage Assignments");
-		
 		
 		
 		//Begin building the layout:
@@ -82,7 +89,20 @@ public class WelcomeFrame extends JPanel {
 		//
 		middleThird.setLayout(new GridLayout(1, 2, 0, 0));
 		middleThird.add(buttonPanel);
-		middleThird.add(spacer_6);
+		
+		//Import the logo file
+		try{
+			logo = ImageIO.read(new File("res/Team RamRod Logo.png"));
+			JLabel logoLabel = new JLabel(new ImageIcon(logo));
+			middleThird.add(logoLabel);
+		}
+		
+		catch(Exception e){
+			System.err.println(e);
+			middleThird.add(spacer_6);
+		}
+				
+		
 		
 
 		

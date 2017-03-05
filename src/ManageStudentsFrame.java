@@ -228,4 +228,15 @@ public class ManageStudentsFrame extends JPanel {
 	public void setInactiveCheckbox(boolean input){
 		includeInactive.setSelected(input);
 	}
+	
+	public void resetDisplay(){
+		txtId.setText("ID");
+		txtFirstname.setText("first_name");
+		txtLastname.setText("last_name");
+		txtAddress.setText("address");
+		txtCity.setText("city");
+		txtState.setText("state");
+		txtZip.setText("zip");
+		txtDob.setText("DOB");
+	}
 }
