@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 
 public class Gradebook extends JFrame{
@@ -29,6 +32,8 @@ public class Gradebook extends JFrame{
 	private NewCoursePopup newCoursePopup;
 	private EditCoursePopup editCoursePopup;
 	private EditAssignmentPopup editAssignmentPopup;
+	private SelectStudentPopup selectStudentPopup;
+	private SelectCoursePopup selectCoursePopup;
 	
 	
 	//Create the main application panel
@@ -44,10 +49,14 @@ public class Gradebook extends JFrame{
 	//	assignmentTypeList is a list of assignment types
 	//
 	private DefaultListModel<Student> studentList;
+	private DefaultListModel<Student> sectionRoster;
 	private DefaultListModel<Course> courseList;
-	private DefaultListModel<CourseSection> classList;
+	private DefaultListModel<CourseSection> courseSectionList;
 	private DefaultListModel<Assignment> assignmentList;
 	private DefaultListModel<AssignmentType> assignmentTypeList;
+	private DefaultListModel<Grades> gradeList;
+	
+
 	
 	
 	//Create a student variable used for misc actions
@@ -59,6 +68,7 @@ public class Gradebook extends JFrame{
 	//
 	private Course selectedCourse;
 	
+	private CourseSection selectedSection;
 	
 	//Create the cardlayout used for swapping the currently
 	//	viewed panel
@@ -130,7 +140,7 @@ public class Gradebook extends JFrame{
 		manageClasses.deleteStudentActionListener(new RemoveStudentFromClass());
 		manageClasses.addStudentActionListener(new AddStudentToClass());
 		manageClasses.showClassActionListener(new ManageShowClass());
-		manageClasses.submitChangesActionListener(new ManageSubmitChanges());
+		//manageClasses.submitChangesActionListener(new ManageSubmitChanges());
 
 				
 		//Create the manage courses frame and add action listeners
@@ -189,10 +199,12 @@ public class Gradebook extends JFrame{
 		//Initialize each of the list models
 		//
 		studentList = new DefaultListModel<Student>();
+		sectionRoster = new DefaultListModel<Student>();
 		courseList = new DefaultListModel<Course>();
-		classList = new DefaultListModel<CourseSection>();
+		courseSectionList = new DefaultListModel<CourseSection>();
 		assignmentList = new DefaultListModel<Assignment>();
 		assignmentTypeList = new DefaultListModel<AssignmentType>();
+		gradeList = new DefaultListModel<Grades>();
 		
 		
 	}
@@ -234,6 +246,10 @@ public class Gradebook extends JFrame{
 			//
 			CardLayout cl = (CardLayout)applicationPanel.getLayout();
 			cl.show(applicationPanel, MANAGECLASSES);
+			
+			loadActiveCourseSections();
+			
+			manageClasses.setSectionList(courseSectionList);
 		}
 	};
 	
@@ -273,6 +289,10 @@ public class Gradebook extends JFrame{
 			//
 			CardLayout cl = (CardLayout)applicationPanel.getLayout();
 			cl.show(applicationPanel, ENTERGRADES);
+			
+			loadActiveCourseSections();
+			
+			enterGrades.setClassList(courseSectionList);
 		}
 	};
 	
@@ -286,6 +306,10 @@ public class Gradebook extends JFrame{
 			//
 			CardLayout cl = (CardLayout)applicationPanel.getLayout();
 			cl.show(applicationPanel, REPORTS);
+			
+			loadActiveCourseSections();
+			
+			reportPanel.setClassList(courseSectionList);
 		}
 	};
 	
@@ -588,6 +612,8 @@ public class Gradebook extends JFrame{
 			cl.show(applicationPanel, WELCOME);
 			
 			manageStudents.resetDisplay();
+			enterGrades.resetDisplay();
+			reportPanel.resetDisplay();
 		}
 	};
 	
@@ -602,12 +628,41 @@ public class Gradebook extends JFrame{
 	class ReportsShowClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			//Get the currently selected class from the reports panel
+			//
+			int currentlySelectedClass = reportPanel.getSelectedClassIndex();
+			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
+			
+			//Clear out the sectionRoster list
+			sectionRoster.removeAllElements();
+			
+			//Load the section roster
+			getSectionRoster(selectedSection.getSection());
+			
+			//Update the report panel to show the course roster
+			reportPanel.setStudentList(sectionRoster);
+			
 		}
 	}
 	
 	
 	class GenerateReport implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			
+			reportPanel.clearReport();
+			
+			//Currently selected course
+			int currentlySelectedClass = reportPanel.getSelectedClassIndex();
+			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
+			
+			//Currently selected student
+			int currentlySelectedStudent = reportPanel.getSelectedStudentIndex();
+			
+			if(currentlySelectedStudent != -1){
+				selectedStudent = sectionRoster.getElementAt(currentlySelectedStudent);
+			}
+		
+			getReportInfo(selectedSection.getCourse(), selectedSection.getSection());
 			
 		}
 	}
@@ -744,12 +799,129 @@ public class Gradebook extends JFrame{
 	class DeleteClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			//Get currently selected class in the manage classes page
+			int selectedSectionIndex = manageClasses.getSelectedSectionIndex();
+			
+			
+			//Set the global section variable to the currently selected section
+			//
+			selectedSection = courseSectionList.getElementAt(selectedSectionIndex);
+			
+			
+			//set the current course to the one that matches the selected section
+			//
+			selectedCourse = getSingleCourseInfo(selectedSection.getCourse());
+			
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			//get confirmation
+			if(confirmationDialog("Are you sure you would like to remove the selected class?")){
+				
+				//set currently selected class active = 0;
+				try{
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					stmt = c.createStatement();
+		
+				
+					//Insert into the database the new student information
+					//
+					stmt.executeUpdate("UPDATE course_section SET active = '0' WHERE section_num = '"
+							+ selectedSection.getSection() + "';");
+				
+			
+					stmt.close();
+					c.close();
+				
+					loadActiveCourseSections();
+					
+					manageClasses.setSectionList(courseSectionList);
+					
+				}
+			
+				catch(Exception e2){
+					System.err.println(e2);
+				
+				}
+			}
+			
+			
 		}
 	}
 	
 	
 	class AddClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			//Clear the course list
+			//
+			courseList.removeAllElements();
+			
+			//get the list of students from the database and populate the studentList
+			//
+			loadCoursesFromDB();
+			
+			
+			//Open the popup window to add a new class
+			//
+			selectCoursePopup = new SelectCoursePopup(courseList);
+			
+			//Set what the submit button does in the add student popup
+			//
+			selectCoursePopup.submitActionListener(new SubmitAddClass());
+			
+			
+			
+		}
+	}
+	
+	
+	class SubmitAddClass implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			int currentlySelectedCourse = selectCoursePopup.getSelectedCourseIndex();
+			
+			Course selectedCourse = courseList.getElementAt(currentlySelectedCourse);
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			
+			if(confirmationDialog("Are you sure you want to create a new class?")){
+				
+				try{
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					stmt = c.createStatement();
+		
+				
+					//Insert into the database the new student information
+					//
+					stmt.executeUpdate("INSERT INTO course_section (course_num, active) VALUES ('"
+							+ selectedCourse.getNUM() + "', '"
+							+ "1" + "');");
+				
+			
+					stmt.close();
+					c.close();
+				
+					//Close the new class popup
+					//
+					selectCoursePopup.dispose();
+				
+					loadActiveCourseSections();
+					
+					manageClasses.setSectionList(courseSectionList);
+					
+				}
+			
+				catch(Exception e2){
+					System.err.println(e2);
+				
+				}
+				
+				
+			}
 			
 		}
 	}
@@ -758,6 +930,32 @@ public class Gradebook extends JFrame{
 	class RemoveStudentFromClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			int currentSelectedStudent = manageClasses.getSelectedStudentIndex();
+			int currentSelectedClass = manageClasses.getSelectedSectionIndex();
+			
+			
+			selectedSection = courseSectionList.getElementAt(currentSelectedClass);
+			selectedStudent = sectionRoster.getElementAt(currentSelectedStudent);
+			
+			
+			if(confirmationDialog("Are you sure you want to delete " + selectedStudent.toString() + " \nFrom this class?"))
+			{	
+				removeStudentFromSection(selectedStudent.getID(), selectedSection.getSection());			
+			
+				//Clear the roster list
+				//
+				sectionRoster.removeAllElements();
+				
+				
+				//Load the roster list with the students from the currently selected class
+				getSectionRoster(selectedSection.getSection());
+				
+				
+				//Load the lists and information into the manage classes panel
+				//
+				manageClasses.displaySectionInfo(selectedSection, selectedCourse);
+				manageClasses.setStudentList(sectionRoster);
+			}
 		}
 	}
 	
@@ -765,26 +963,166 @@ public class Gradebook extends JFrame{
 	class AddStudentToClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			//Clear the student list
+			//
+			studentList.removeAllElements();
+			
+			//get the list of students from the database and populate the studentList
+			//
+			loadStudentsFromDB();
+			
+			
+			//Open the popup window to add a new student
+			//
+			selectStudentPopup = new SelectStudentPopup(studentList);
+			
+			//Set what the submit button does in the add student popup
+			//
+			selectStudentPopup.submitActionListener(new SubmitAddStudent());
 		}
 	}
+	
+	class SubmitAddStudent implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			
+			
+			//Get the student thats selected in the selectStudentPopup
+			int currentSelectedStudent = selectStudentPopup.getSelectedStudentIndex();
+			selectedStudent = studentList.getElementAt(currentSelectedStudent);
+			
+			//Get currently selected class
+			//
+			int selectedSectionIndex = manageClasses.getSelectedSectionIndex();
+			
+			
+			//Set the global section variable to the currently selected section
+			//
+			selectedSection = courseSectionList.getElementAt(selectedSectionIndex);
+			
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			//Confirm that you want to add the current student
+			if(confirmationDialog("Are you sure you want to add the selected student to this class?")){
+			
+				
+				
+				try{
+					Class.forName("org.sqlite.JDBC");
+					c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+					stmt = c.createStatement();
+		
+				
+					//Insert into the database the new student information
+					//
+					stmt.executeUpdate("INSERT INTO section_roster (section_num, student_id) VALUES ('"
+							+ selectedSection.getSection() + "', '"
+							+ selectedStudent.getID() + "');");
+				
+			
+					stmt.close();
+					c.close();
+				
+					//Close the new student popup
+					//
+					selectStudentPopup.dispose();
+				
+					//Clear the roster list
+					//
+					sectionRoster.removeAllElements();
+					
+					
+					//Load the roster list with the students from the currently selected class
+					getSectionRoster(selectedSection.getSection());
+					
+					
+					//Load the lists and information into the manage classes panel
+					//
+					manageClasses.displaySectionInfo(selectedSection, selectedCourse);
+					manageClasses.setStudentList(sectionRoster);
+					
+				}
+			
+				catch(Exception e2){
+					System.err.println(e2);
+				
+				}
+				//create a row in the database that puts that student in the currently selected class
+			
+				//Update the student list for the currently selected class
+			
+				//close the add student window
+			}
+			
+		}
+	}
+	
 	
 	
 	class ManageShowClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
-		}
-	}
-	
-	
-	class ManageSubmitChanges implements ActionListener{
-		public void actionPerformed(ActionEvent e){
+			//Get currently selected class
+			//
+			int selectedSectionIndex = manageClasses.getSelectedSectionIndex();
 			
+			
+			//Set the global section variable to the currently selected section
+			//
+			selectedSection = courseSectionList.getElementAt(selectedSectionIndex);
+			
+			
+			//set the current course to the one that matches the selected section
+			//
+			selectedCourse = getSingleCourseInfo(selectedSection.getCourse());
+			
+			
+			//Clear the roster list
+			//
+			sectionRoster.removeAllElements();
+			
+			
+			//Load the roster list with the students from the currently selected class
+			getSectionRoster(selectedSection.getSection());
+			
+			
+			//Load the lists and information into the manage classes panel
+			//
+			manageClasses.displaySectionInfo(selectedSection, selectedCourse);
+			manageClasses.setStudentList(sectionRoster);
 		}
 	}
 	
 	
 	class SaveGrades implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+						
+			DefaultTableModel gradesTable = enterGrades.getGradesFromTable();
+			
+			//Remove all the grades from the gradeList and rebuild it with the 
+			//	values that appear in the assignments table
+			//
+			gradeList.removeAllElements();
+			
+			for(int i = 0; i < gradesTable.getRowCount(); i++){
+					gradeList.addElement(
+						new Grades(assignmentList.getElementAt(i).getID(),
+								"unused",
+								Float.parseFloat((String) gradesTable.getValueAt(i, 1)), 
+								0));
+			}
+			
+			
+			/*DEBUG CODE
+			// Print out all the grades from the grade table, along with their assignment numbers
+			for(int i = 0; i < gradeList.getSize(); i++){
+				System.out.println(gradeList.getElementAt(i).getNum() 
+						+ " " + gradeList.getElementAt(i).getPoints());
+			}
+			*/
+			
+			saveStudentGradesToDB(selectedStudent.getID());
 			
 		}
 	}
@@ -793,21 +1131,57 @@ public class Gradebook extends JFrame{
 	class GradesShowClass implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			//Get the currently selected class from the enter grades panel
+			//
+			int currentlySelectedClass = enterGrades.getSelectedClassIndex();
+			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
+			
+			//Clear out the sectionRoster list
+			sectionRoster.removeAllElements();
+			
+			//Load the section roster
+			getSectionRoster(selectedSection.getSection());
+			
+			//Update the enter grades panel to show the course roster
+			enterGrades.setStudentList(sectionRoster);
+			
 		}
 	}
 	
 	
 	class GradesShowAssignments implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			//Clear out the current assignmentList
+			assignmentList.removeAllElements();
 			
+			enterGrades.clearAssignments();
+			
+			//Load the assignmentList with all the assignments associated with the 
+			//Currently selected course
+			int currentlySelectedClass = enterGrades.getSelectedClassIndex();
+			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
+			
+			int currentlySelectedStudent = enterGrades.getSelectedStudentIndex();
+			selectedStudent = sectionRoster.getElementAt(currentlySelectedStudent);
+			
+			selectedCourse = getSingleCourseInfo(selectedSection.getCourse());
+			
+			loadAssignmentsForCourse();
+			
+			loadStudentGradesForClass(selectedSection.getSection(), selectedCourse.getNUM(), selectedStudent.getID());
+			
+			//load the list of assignments into the enter grades table
+			enterGrades.displayAssignments(createAssignmentArray());
 		}
+
+		
 	}
 	
 	
 	class DeleteCourse implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
-try{
+			try{
 				
 				//get currently selected member from the manage students panel
 				//
@@ -857,8 +1231,6 @@ try{
 			{
 				System.err.println(e1);
 			}
-			
-			
 		}
 	}
 	
@@ -908,10 +1280,7 @@ try{
 				catch(Exception e2){
 					System.err.println(e2);
 				
-				}
-				
-				
-				
+				}				
 			}
 		}
 	}
@@ -978,6 +1347,8 @@ try{
 		}
 	}
 	
+	
+	
 	class SubmitAssignment implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			//Get a new student object from the popup window
@@ -1021,9 +1392,6 @@ try{
 				
 				}
 			}
-			
-			
-			
 		}
 	}
 	
@@ -1127,13 +1495,6 @@ try{
 					stmt = c.createStatement();
 					
 					
-					
-					
-					
-					//Update the student in the database with all of the new information
-					//	the id_num is used for matching the student being edited
-					//	with the student in the db
-					//
 					stmt.executeUpdate("UPDATE assignment SET " +
 										"total_points = '" + newAssignment.getPoints() + "', " +
 										"description = '" + newAssignment.getDescription() + "', " +
@@ -1365,7 +1726,7 @@ try{
 		
 	}
 	
-public boolean loadAssignmentTypes(){
+	public boolean loadAssignmentTypes(){
 		
 		assignmentTypeList.removeAllElements();
 			
@@ -1405,6 +1766,459 @@ public boolean loadAssignmentTypes(){
 			return false;
 		}
 		
+	}
+	
+	
+	public boolean loadActiveCourseSections(){
+		
+		courseSectionList.removeAllElements();
+			
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM course_section;");
+		
+			
+						
+			while(rs.next()){
+				if(Integer.parseInt(rs.getString("active")) == 1){
+					courseSectionList.addElement(
+				
+						new CourseSection(Integer.parseInt(rs.getString("section_num")),
+										rs.getString("course_num")));
+				}
+			}
+			
+					
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+	}
+	
+	
+	public boolean loadAllCourseSections(){
+		
+		courseSectionList.removeAllElements();
+			
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM course_section;");
+		
+			
+						
+			while(rs.next()){
+				courseSectionList.addElement(
+				
+						new CourseSection(Integer.parseInt(rs.getString("section_num")),
+										rs.getString("course_num")));
+			}
+			
+					
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+	}
+	
+	public Course getSingleCourseInfo(String courseName){
+		
+		Course returnCourse = new Course(courseName);
+	
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT * FROM course WHERE course_num='" + courseName + "';");
+		
+			
+						
+			while(rs.next()){
+				returnCourse = new Course(rs.getString("course_num"), 
+									rs.getString("name"), 
+									rs.getString("description"),
+									rs.getString("max_stu"),
+									rs.getString("day"));
+				
+						
+			}
+			
+					
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			return returnCourse;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return returnCourse;
+		}
+		
+	}
+	
+	public void getSectionRoster(int sectionNumber){
+		
+		
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			stmt = c.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT section_roster.section_num, section_roster.student_id," 
+										+ " student.id_num, student.last_name, student.first_name," 
+										+ " student.active "
+										+ "FROM section_roster, student "
+										+ "WHERE section_roster.section_num = '" + sectionNumber + "'" 
+										+ "AND section_roster.student_id = student.id_num "
+										+ "ORDER BY student.last_name asc;");
+		
+			while(rs.next()){
+				if(rs.getString("active").equals("1")){
+					sectionRoster.addElement(
+						new Student(Integer.parseInt(rs.getString("id_num")), 
+										rs.getString("first_name"), 
+										rs.getString("last_name")));
+			
+				}
+			}
+			
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+
+		}
+		
+	}
+	
+	
+	private boolean removeStudentFromSection(int id, int section) {
+		
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			stmt = c.createStatement();
+			stmt.executeUpdate("DELETE FROM section_roster "
+									+ "WHERE section_num = '" + section
+									+ "' AND student_id = '" + id + "';");
+		
+					
+			
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+		
+	}
+	
+	private boolean addStudentToSection(int id, int section) {
+		
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			stmt = c.createStatement();
+			stmt.executeUpdate("INSERT INTO section_roster (section_num, student_id)"
+									+ "VALUES (" + section
+									+ "," + id + ");");
+		
+					
+			
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+		
+	}
+	
+	public String[][] createAssignmentArray(){
+		String[][] output = new String[assignmentList.getSize()][5];
+		
+		for(int i = 0; i < assignmentList.getSize(); i++){
+			output[i][0] = assignmentList.getElementAt(i).getName();
+			output[i][1] = "0";
+			output[i][2] = assignmentList.getElementAt(i).getPoints() + "";
+			output[i][3] = "0";
+			output[i][4] = "";
+			
+			for(int j = 0; j < gradeList.getSize(); j++){
+				if(gradeList.getElementAt(j).getNum() == assignmentList.getElementAt(i).getID()){
+					output[i] = gradeList.getElementAt(j).getInfo();
+					break;
+				}
+			}
+		}
+		
+		return output;
+		
+	}
+	
+	private boolean loadStudentGradesForClass(int sectionNumber, String courseNum, int studentID) {
+		try{
+			
+			gradeList.removeAllElements();
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			
+			
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT grades.assignment_num, assignment.name, grades.points, assignment.total_points "
+							+ "FROM assignment, grades " 
+							+ "WHERE assignment.course = '"
+							+ courseNum + "' "
+							+ "AND grades.student_id = '"
+							+ studentID + "' "
+							+ "AND grades.assignment_num = assignment.assignment_id;");
+		
+			
+			
+			
+			while(rs.next()){
+				
+					gradeList.addElement(
+						new Grades(	Integer.parseInt(rs.getString("assignment_num")),
+										rs.getString("name"),
+										Float.parseFloat(rs.getString("points")),
+										Float.parseFloat(rs.getString("total_points"))));
+				
+			}
+			
+					
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+	}
+	
+private boolean saveStudentGradesToDB(int studentID) {
+		
+		try{
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+			for(int i = 0; i < gradeList.getSize(); i++){
+				stmt = c.createStatement();
+				stmt.executeUpdate("INSERT or REPLACE INTO grades (assignment_num, student_id, points) "
+									+ "VALUES (" + gradeList.getElementAt(i).getNum()
+									+ "," + studentID
+									+ "," + gradeList.getElementAt(i).getPoints() + ");");
+		
+					
+			
+				
+			}
+			
+			stmt.close();
+			c.close();
+			
+			return true;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return false;
+		}
+		
+		
+	}
+	
+	public void getReportInfo(String courseNumber, int courseSection){
+		
+		ArrayList<String[]> reportRecords = new ArrayList<String[]>();
+		
+		try{
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+					
+			stmt = c.createStatement();
+			
+			ResultSet rs = stmt.executeQuery("SELECT section_roster.section_num, student.last_name, student.first_name, "
+					+ "SUM(grades.points) as points, SUM(assignment.total_points) as totalPoints "
+					+ "FROM section_roster, student, grades, assignment "
+					+ "WHERE student.id_num = grades.student_id "
+					+ "AND grades.assignment_num = assignment.assignment_id "
+					+ "AND assignment.course = \"" + courseNumber + "\" "
+					+ "AND section_roster.section_num = \"" + courseSection + "\""
+					+ "GROUP BY student.id_num, assignment.course "
+					+ "ORDER BY points DESC;");
+		
+			
+			int i = 1;			
+			while(rs.next()){
+				reportRecords.add(new String[]{(rs.getString("last_name") + ", " + rs.getString("first_name")),
+					rs.getString("points"), rs.getString("totalPoints"),
+					(Float.parseFloat(rs.getString("points")) / Float.parseFloat(rs.getString("totalPoints")) * 100) + "",
+					getLetterGrade((Float.parseFloat(rs.getString("points")) / Float.parseFloat(rs.getString("totalPoints")) * 100)), i++ + ""});
+			}
+			
+			/* DEBUG
+			for(int i = 0 ; i < reportRecords.size(); i++){
+				System.out.println(reportRecords.get(i)[0]);
+				System.out.println(reportRecords.get(i)[1]);
+				System.out.println(reportRecords.get(i)[2]);
+				System.out.println(reportRecords.get(i)[3]);
+				System.out.println(reportRecords.get(i)[4]);
+				
+			}
+			*/
+			
+			
+			reportPanel.displayReport(reportRecords);
+			
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			
+			
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			
+		}
+	}
+	
+	public String getLetterGrade(float percentage){
+		
+		String letterGrade;
+		
+		if(percentage > 92)
+			letterGrade = new String("A");
+		else if(percentage > 90)
+			letterGrade = new String("A-");
+		else if(percentage > 87)
+			letterGrade = new String("B+");
+		else if(percentage > 82)
+			letterGrade = new String("B");
+		else if(percentage > 80)
+			letterGrade = new String("B-");
+		else if(percentage > 77)
+			letterGrade = new String("C+");
+		else if(percentage > 72)
+			letterGrade = new String("C");
+		else if(percentage > 70)
+			letterGrade = new String("C-");
+		else if(percentage > 65)
+			letterGrade = new String("D");
+		else
+			letterGrade = new String("F");
+		
+		return letterGrade;
 	}
 	
 }

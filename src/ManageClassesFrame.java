@@ -1,12 +1,15 @@
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
+
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 public class ManageClassesFrame extends JPanel{
@@ -23,6 +26,9 @@ public class ManageClassesFrame extends JPanel{
 					btnDeleteStudent;
 	
 	private JScrollPane classList, classRoster;
+	
+	private JList<CourseSection> list;
+	private JList<Student> list2;
 
 	public ManageClassesFrame(){
 		//Create each of the panels
@@ -83,15 +89,15 @@ public class ManageClassesFrame extends JPanel{
 		btnAddStudent = new JButton("Add Student");
 		btnDeleteStudent = new JButton("Delete Student");
 				
-		//TEMPORARY CODE*******************
-		String[] listOfClasses = {"Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6"};
-		String[] listOfStudents = {"Student 1", "Student 2", "Student 3", "Student 4", "Student 5"};
-		
 		classList = new JScrollPane();
 		classRoster = new JScrollPane();
 				
-		JList<String> list = new JList<String>(listOfClasses);
-		JList<String> list2 = new JList<String>(listOfStudents);
+		list = new JList<CourseSection>();
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		
+		list2 = new JList<Student>();
+		list2.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		classList.setViewportView(list);
 		classRoster.setViewportView(list2);		
@@ -136,7 +142,7 @@ public class ManageClassesFrame extends JPanel{
 		rightStudentListPanel.add(studentListButtonsPanel, BorderLayout.SOUTH);
 		
 		
-		rightButtonPanel.add(btnSubmitAboveChanges);
+		//rightButtonPanel.add(btnSubmitAboveChanges);
 		rightButtonPanel.add(btnDeleteClass);
 			
 		leftPanel.add(leftContentPanel, BorderLayout.CENTER);
@@ -180,12 +186,44 @@ public class ManageClassesFrame extends JPanel{
 		btnLoadClassInfo.addActionListener(scal);
 	}
 	
-	public void submitChangesActionListener(ActionListener sal){
-		btnSubmitAboveChanges.addActionListener(sal);
-	}
+	//public void submitChangesActionListener(ActionListener sal){
+	//	btnSubmitAboveChanges.addActionListener(sal);
+	//}
 	
 	public void homeButtonActionListener(ActionListener hal){
 		btnCancelToHome.addActionListener(hal);
 	}
 	
+	public int getSelectedSectionIndex(){
+		return list.getSelectedIndex();
+	}
+	
+	public int getSelectedStudentIndex(){
+		return list2.getSelectedIndex();
+	}
+	
+	public void displaySectionInfo(CourseSection section, Course course){
+		classID.setText(section.getSection() + "");
+		txtCourseNum.setText(course.getName());
+		txtMeetingDay.setText(course.getDay());
+		txtMaxStudents.setText(course.getMax() + "");
+	}
+	
+	public void setSectionList(DefaultListModel<CourseSection> classes){
+		list.setModel(classes);
+	}
+	
+	public void setStudentList(DefaultListModel<Student> students){
+		list2.setModel(students);
+	}
+	
+	public void resetDisplay(){
+		list2.setModel(new DefaultListModel<Student>());
+		
+		classID.setText("Class Number");
+		txtCourseNum.setText("Course Name/Number");
+		txtMeetingDay.setText("Meeting Day");
+		txtMaxStudents.setText("Max Students");
+		
+	}
 }

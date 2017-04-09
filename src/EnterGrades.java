@@ -2,6 +2,9 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -17,18 +20,20 @@ public class EnterGrades extends JPanel{
 					studentSelectPanel, classSelectPanel, bottomNorthPanel;
 	
 	private JTable assignmentGrades;
+	private DefaultTableModel gradesTableModel;
 	
 	private JScrollPane tableScrollPane;
 	
 	private JLabel spacer_1, spacer_2;
 	
-	
+	private JList<CourseSection> classes;
+	private JList<Student> students;
 	
 	private JScrollPane classList, classRoster;
 	
 	private JButton btnCancelToHome, btnSaveAllGrades, btnShowClassRoster, btnShowStudentAssignments;
 	
-	private String[] displayColumns = {"Assignment Name", "Assignment Type", "Points / Total", "Percentage", "Letter Grade"};
+	private String[] displayColumns = {"Assignment Name", "Points", "Total Points", "Percentage", "Letter Grade"};
 	
 	public EnterGrades(){
 		
@@ -66,23 +71,30 @@ public class EnterGrades extends JPanel{
 		
 		//TEMPORARY CODE
 		String[][] assignmentData = {
-				{"Quiz 1", "Quiz", "50 / 50", "100", "A"},
-				{"Homework 1", "Homework", "20/25", "80", "B"}
+				{"Assignment name", "Assignment TYpe", "Points / Total", "Percentage", "Letter"}
 		};
 		
-		String[] listOfClasses = {"Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6"};
-		String[] listOfStudents = {"Student 1", "Student 2", "Student 3", "Student 4", "Student 5"};
+		
+		assignmentGrades = new JTable();
+		gradesTableModel = (DefaultTableModel)assignmentGrades.getModel();
+		gradesTableModel.setColumnIdentifiers(displayColumns);
+		tableScrollPane = new JScrollPane(assignmentGrades);
+		
+		classes = new JList<CourseSection>();
+		classes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				
+		students = new JList<Student>();
+		students.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		classList = new JScrollPane();
 		classRoster = new JScrollPane();
 				
-		JList<String> list = new JList<String>(listOfClasses);
-		JList<String> list2 = new JList<String>(listOfStudents);
+				
 		
-		classList.setViewportView(list);
-		classRoster.setViewportView(list2);
+		classList.setViewportView(classes);
+		classRoster.setViewportView(students);
 		
-		assignmentGrades = new JTable(assignmentData, displayColumns);
+		
 		
 		homeButtonPanel.add(btnSaveAllGrades);
 		homeButtonPanel.add(btnCancelToHome);
@@ -98,7 +110,7 @@ public class EnterGrades extends JPanel{
 		topPanel.add(topLeftContentPane);
 		topPanel.add(topRightContentPane);
 
-		tableScrollPane = new JScrollPane(assignmentGrades);
+		
 		
 		bottomNorthPanel.add(btnShowStudentAssignments);
 		
@@ -130,4 +142,43 @@ public class EnterGrades extends JPanel{
 	public void showAssignmentsActionListener(ActionListener saal){
 		btnShowStudentAssignments.addActionListener(saal);
 	}
+	
+	public void setClassList(DefaultListModel<CourseSection> input){
+		classes.setModel(input);
+		
+	}
+	
+	public void setStudentList(DefaultListModel<Student> input){
+		students.setModel(input);
+		
+	}
+	
+	public int getSelectedClassIndex(){
+		return classes.getSelectedIndex();
+	}
+	
+	public int getSelectedStudentIndex(){
+		return students.getSelectedIndex();
+	}
+	
+	public void displayAssignments(String[][] input){
+		for(int i = 0; i < input.length; i++){
+			gradesTableModel.addRow(input[i]);
+		}
+	}
+	
+	public DefaultTableModel getGradesFromTable(){
+		
+		return gradesTableModel;
+	}
+	
+	public void clearAssignments(){
+		gradesTableModel.setRowCount(0);
+	}
+	
+	public void resetDisplay(){
+		students.setModel(new DefaultListModel<Student>());
+		gradesTableModel.setRowCount(0);
+	}
+	
 }

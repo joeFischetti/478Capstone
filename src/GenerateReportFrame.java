@@ -1,7 +1,12 @@
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -13,22 +18,24 @@ public class GenerateReportFrame extends JPanel{
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel 	mainPanel, topPanel, topLeftContentPane, topRightContentPane, 
-					bottomPanel, homeButtonPanel, studentSelectPanel, 
-					classSelectPanel, bottomNorthPanel;
+	private JPanel mainPanel, topPanel, topLeftContentPane, topRightContentPane, bottomPanel, homeButtonPanel,
+					studentSelectPanel, classSelectPanel, bottomNorthPanel;
 	
 	private JTable assignmentGrades;
+	private DefaultTableModel gradesTableModel;
 	
 	private JScrollPane tableScrollPane;
 	
 	private JLabel spacer_1, spacer_2;
 	
+	private JList<CourseSection> classes;
+	private JList<Student> students;
+	
 	private JScrollPane classList, classRoster;
 	
-	private JButton btnCancelToHome, btnPrintReport, btnShowClassRoster, btnGenerateReport;
+	private JButton btnCancelToHome, btnPrintReport, btnShowClassRoster, btnShowStudentAssignments;
 	
-	private String[] displayColumns = {"Student Name", "Points", 
-							"Possible Points", "Percentage", "Letter Grade", "Rank"};
+	private String[] displayColumns = {"Student Name", "Points", "Possible Points", "Percentage", "Letter Grade", "Rank"};
 	
 	public GenerateReportFrame(){
 		
@@ -42,6 +49,7 @@ public class GenerateReportFrame extends JPanel{
 		classSelectPanel = new JPanel();
 		bottomNorthPanel = new JPanel();
 				
+		
 		spacer_1 = new JLabel("");
 		spacer_2 = new JLabel("");
 		
@@ -60,31 +68,30 @@ public class GenerateReportFrame extends JPanel{
 		
 		btnCancelToHome = new JButton("Home Screen");
 		btnPrintReport = new JButton("Print Report");
-		btnGenerateReport = new JButton("Show Student Assignments");
+		btnShowStudentAssignments = new JButton("Generate Report");
 		btnShowClassRoster = new JButton("Show Class Roster");
 		
-		//TEMPORARY CODE
-		//--------------------------------------------------------------------------
-		String[][] assignmentData = {
-				{"One, Student", "65", "100", "65%", "D", "2"},
-				{"Two, Student", "100", "100", "100%", "A", "1"}
-		};
 		
-		String[] listOfClasses = {"Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6"};
-		String[] listOfStudents = {"Student 1", "Student 2", "Student 3", "Student 4", "Student 5"};
+		assignmentGrades = new JTable();
+		gradesTableModel = (DefaultTableModel)assignmentGrades.getModel();
+		gradesTableModel.setColumnIdentifiers(displayColumns);
+		tableScrollPane = new JScrollPane(assignmentGrades);
+		
+		classes = new JList<CourseSection>();
+		classes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+				
+		students = new JList<Student>();
+		students.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		classList = new JScrollPane();
 		classRoster = new JScrollPane();
 				
-		JList<String> list = new JList<String>(listOfClasses);
-		JList<String> list2 = new JList<String>(listOfStudents);
+				
 		
-		classList.setViewportView(list);
-		classRoster.setViewportView(list2);
+		classList.setViewportView(classes);
+		classRoster.setViewportView(students);
 		
-		//---------------------------------------------------------------------------
 		
-		assignmentGrades = new JTable(assignmentData, displayColumns);
 		
 		homeButtonPanel.add(btnPrintReport);
 		homeButtonPanel.add(btnCancelToHome);
@@ -100,9 +107,9 @@ public class GenerateReportFrame extends JPanel{
 		topPanel.add(topLeftContentPane);
 		topPanel.add(topRightContentPane);
 
-		tableScrollPane = new JScrollPane(assignmentGrades);
 		
-		bottomNorthPanel.add(btnGenerateReport);
+		
+		bottomNorthPanel.add(btnShowStudentAssignments);
 		
 		bottomPanel.add(tableScrollPane, BorderLayout.CENTER);
 		bottomPanel.add(spacer_1, BorderLayout.EAST);
@@ -117,20 +124,58 @@ public class GenerateReportFrame extends JPanel{
 		
 	}
 	
-
 	public void homeButtonActionListener(ActionListener hal){
 		btnCancelToHome.addActionListener(hal);
 	}
 	
-	public void printActionListener(ActionListener pal){
-		btnPrintReport.addActionListener(pal);
+	public void printActionListener(ActionListener sal){
+		btnPrintReport.addActionListener(sal);
 	}
 	
 	public void showClassActionListener(ActionListener scal){
 		btnShowClassRoster.addActionListener(scal);
 	}
 	
-	public void generateReportActionListener(ActionListener gral){
-		btnGenerateReport.addActionListener(gral);
+	public void generateReportActionListener(ActionListener saal){
+		btnShowStudentAssignments.addActionListener(saal);
 	}
+	
+	public void setClassList(DefaultListModel<CourseSection> input){
+		classes.setModel(input);
+		
+	}
+	
+	public void setStudentList(DefaultListModel<Student> input){
+		students.setModel(input);
+		
+	}
+	
+	public int getSelectedClassIndex(){
+		return classes.getSelectedIndex();
+	}
+	
+	public int getSelectedStudentIndex(){
+		return students.getSelectedIndex();
+	}
+	
+	public void displayReport(ArrayList<String[]> input){
+		
+		for(int i = 0; i < input.size(); i++){
+			gradesTableModel.addRow(input.get(i));
+		}
+	}
+	
+	public DefaultTableModel getGradesFromTable(){
+		
+		return gradesTableModel;
+	}
+	
+	public void clearReport(){
+		gradesTableModel.setRowCount(0);
+	}
+	
+	public void resetDisplay(){
+		students.setModel(new DefaultListModel<Student>());
+	}
+	
 }
