@@ -1,16 +1,15 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 
 public class Gradebook extends JFrame{
@@ -164,6 +163,7 @@ public class Gradebook extends JFrame{
 		enterGrades.saveActionListener(new SaveGrades());
 		enterGrades.showClassActionListener(new GradesShowClass());
 		enterGrades.showAssignmentsActionListener(new GradesShowAssignments());
+		enterGrades.selectNewClassActionListener(new ResetGradesSelection());
 		
 		
 		//Create the report panel and add action listeners for
@@ -323,6 +323,12 @@ public class Gradebook extends JFrame{
 			//get currently selected member from the manage students panel
 			//
 			int currentSelectedStudent = manageStudents.getSelectedStudentIndex();
+			
+			if(currentSelectedStudent == -1){
+				errorDialog("Please selected a student");
+				return;
+			}
+			
 			selectedStudent = studentList.getElementAt(currentSelectedStudent);
 			
 			
@@ -380,6 +386,11 @@ public class Gradebook extends JFrame{
 			//get currently selected member from the manage students panel
 			//
 			int currentSelectedCourse = manageCourses.getSelectedCourseIndex();
+			if(currentSelectedCourse == -1){
+				errorDialog("Please select a course");
+				return;
+			}
+			
 			selectedCourse = courseList.getElementAt(currentSelectedCourse);
 			
 			
@@ -478,6 +489,12 @@ public class Gradebook extends JFrame{
 				//get currently selected member from the manage students panel
 				//
 				int currentSelectedStudent = manageStudents.getSelectedStudentIndex();
+				if(currentSelectedStudent == -1){
+					errorDialog("Please select a student");
+					return;
+				}
+				
+				
 				selectedStudent = studentList.getElementAt(currentSelectedStudent);
 				
 				ResultSet rs = stmt.executeQuery("SELECT * FROM student WHERE "
@@ -551,6 +568,10 @@ public class Gradebook extends JFrame{
 					//
 					Student modifyStudent = editStudentPopup.newStudent();
 					
+					if(checkNewStudent(modifyStudent) == null){
+						errorDialog("Illegal inputs in entries");
+						return;
+					}
 					
 					//Update the student in the database with all of the new information
 					//	the id_num is used for matching the student being edited
@@ -581,6 +602,7 @@ public class Gradebook extends JFrame{
 					//Update the student list window
 					manageStudents.setStudentList(studentList);
 					
+					manageStudents.resetDisplay();
 				}
 				
 				
@@ -612,6 +634,8 @@ public class Gradebook extends JFrame{
 			cl.show(applicationPanel, WELCOME);
 			
 			manageStudents.resetDisplay();
+			manageClasses.resetDisplay();
+			manageCourses.resetDisplay();
 			enterGrades.resetDisplay();
 			reportPanel.resetDisplay();
 		}
@@ -631,6 +655,12 @@ public class Gradebook extends JFrame{
 			//Get the currently selected class from the reports panel
 			//
 			int currentlySelectedClass = reportPanel.getSelectedClassIndex();
+			if(currentlySelectedClass == -1){
+				errorDialog("Please select a class");
+				return;
+			}
+			
+			
 			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
 			
 			//Clear out the sectionRoster list
@@ -651,12 +681,31 @@ public class Gradebook extends JFrame{
 			
 			reportPanel.clearReport();
 			
-			//Currently selected course
+			//Get the currently selected class from the reports panel
+			//
 			int currentlySelectedClass = reportPanel.getSelectedClassIndex();
+			if(currentlySelectedClass == -1){
+				errorDialog("Please select a class");
+				return;
+			}
+			
+			
 			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
+			
+			//Clear out the sectionRoster list
+			sectionRoster.removeAllElements();
+			
+			//Load the section roster
+			getSectionRoster(selectedSection.getSection());
+			
+			//Update the report panel to show the course roster
+			reportPanel.setStudentList(sectionRoster);
+			
 			
 			//Currently selected student
 			int currentlySelectedStudent = reportPanel.getSelectedStudentIndex();
+			
+			
 			
 			if(currentlySelectedStudent != -1){
 				selectedStudent = sectionRoster.getElementAt(currentlySelectedStudent);
@@ -684,9 +733,23 @@ public class Gradebook extends JFrame{
 	class SubmitNewStudent implements ActionListener{
 		public void actionPerformed(ActionEvent e){
 			
+			Student newStudent = null;
+			
+			
 			//Get a new student object from the popup window
 			//
-			Student newStudent = newStudentPanel.newStudent();
+			newStudent = newStudentPanel.newStudent();
+			
+			//Check new student for valid inputs
+			newStudent = checkNewStudent(newStudent);
+				
+			if(newStudent == null){
+				errorDialog("Illegal input in entry fields");
+				return;
+			}
+			
+			
+			
 			
 			Connection c = null;
 			Statement stmt = null;
@@ -932,7 +995,10 @@ public class Gradebook extends JFrame{
 			
 			int currentSelectedStudent = manageClasses.getSelectedStudentIndex();
 			int currentSelectedClass = manageClasses.getSelectedSectionIndex();
-			
+			if(currentSelectedStudent == -1){
+				errorDialog("Please select a student");
+				return;
+			}
 			
 			selectedSection = courseSectionList.getElementAt(currentSelectedClass);
 			selectedStudent = sectionRoster.getElementAt(currentSelectedStudent);
@@ -971,7 +1037,26 @@ public class Gradebook extends JFrame{
 			//
 			loadStudentsFromDB();
 			
+			//Get currently selected class
+			//
+			int selectedSectionIndex = manageClasses.getSelectedSectionIndex();
 			
+			
+			//Set the global section variable to the currently selected section
+			//
+			selectedSection = courseSectionList.getElementAt(selectedSectionIndex);
+			
+			
+			int maxStudents = getMaxStudents(selectedSection.getCourse());
+			
+			if(sectionRoster.getSize() == maxStudents){
+				errorDialog("Class at max students");
+				
+				return;
+			}
+			
+				
+				
 			//Open the popup window to add a new student
 			//
 			selectStudentPopup = new SelectStudentPopup(studentList);
@@ -989,16 +1074,7 @@ public class Gradebook extends JFrame{
 			//Get the student thats selected in the selectStudentPopup
 			int currentSelectedStudent = selectStudentPopup.getSelectedStudentIndex();
 			selectedStudent = studentList.getElementAt(currentSelectedStudent);
-			
-			//Get currently selected class
-			//
-			int selectedSectionIndex = manageClasses.getSelectedSectionIndex();
-			
-			
-			//Set the global section variable to the currently selected section
-			//
-			selectedSection = courseSectionList.getElementAt(selectedSectionIndex);
-			
+				
 			
 			Connection c = null;
 			Statement stmt = null;
@@ -1066,7 +1142,10 @@ public class Gradebook extends JFrame{
 			//Get currently selected class
 			//
 			int selectedSectionIndex = manageClasses.getSelectedSectionIndex();
-			
+			if(selectedSectionIndex == -1){
+				errorDialog("Please select a class");
+				return;
+			}
 			
 			//Set the global section variable to the currently selected section
 			//
@@ -1091,6 +1170,12 @@ public class Gradebook extends JFrame{
 			//
 			manageClasses.displaySectionInfo(selectedSection, selectedCourse);
 			manageClasses.setStudentList(sectionRoster);
+		}
+	}
+	
+	class ResetGradesSelection implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			enterGrades.resetDisplay();
 		}
 	}
 	
@@ -1122,7 +1207,7 @@ public class Gradebook extends JFrame{
 			}
 			*/
 			
-			saveStudentGradesToDB(selectedStudent.getID());
+			saveStudentGradesToDB(selectedStudent.getID(), selectedSection.getSection());
 			
 		}
 	}
@@ -1134,6 +1219,13 @@ public class Gradebook extends JFrame{
 			//Get the currently selected class from the enter grades panel
 			//
 			int currentlySelectedClass = enterGrades.getSelectedClassIndex();
+			
+			if(currentlySelectedClass == -1){
+				errorDialog("Please select a class");
+				return;
+			}
+			
+			
 			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
 			
 			//Clear out the sectionRoster list
@@ -1145,25 +1237,38 @@ public class Gradebook extends JFrame{
 			//Update the enter grades panel to show the course roster
 			enterGrades.setStudentList(sectionRoster);
 			
+			//Disable the class selection window
+			enterGrades.enableClassSelection(false);
+			
 		}
 	}
 	
 	
 	class GradesShowAssignments implements ActionListener{
 		public void actionPerformed(ActionEvent e){
+			
 			//Clear out the current assignmentList
 			assignmentList.removeAllElements();
-			
 			enterGrades.clearAssignments();
 			
 			//Load the assignmentList with all the assignments associated with the 
 			//Currently selected course
 			int currentlySelectedClass = enterGrades.getSelectedClassIndex();
-			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
-			
 			int currentlySelectedStudent = enterGrades.getSelectedStudentIndex();
-			selectedStudent = sectionRoster.getElementAt(currentlySelectedStudent);
 			
+			if(currentlySelectedClass == -1){
+				errorDialog("Please select a class");
+				return;
+			}
+			
+			if(currentlySelectedStudent == -1){
+				errorDialog("Please select a student");
+				
+				return;
+			}
+			
+			selectedSection = courseSectionList.getElementAt(currentlySelectedClass);
+			selectedStudent = sectionRoster.getElementAt(currentlySelectedStudent);
 			selectedCourse = getSingleCourseInfo(selectedSection.getCourse());
 			
 			loadAssignmentsForCourse();
@@ -1194,7 +1299,7 @@ public class Gradebook extends JFrame{
 				//Present popup window, and if the user selects yes, remove the currently
 				//	selected member from the db
 				//
-				if(confirmationDialog("Are you sure you want to delete this assignment?")){
+				if(confirmationDialog("Are you sure you want to delete this course?")){
 				
 					Connection c = null;
 					Statement stmt = null;
@@ -1659,14 +1764,23 @@ public class Gradebook extends JFrame{
 	//
 	public boolean confirmationDialog(String message){
 		
-		int decision = JOptionPane.showConfirmDialog(this.getContentPane(), message, "Confirm", JOptionPane.YES_NO_OPTION);
+		int decision = JOptionPane.showConfirmDialog(this.getContentPane(), 
+				message, "Confirm", JOptionPane.YES_NO_OPTION);
 		
-		if(decision == 1){
-			return false;
+		if(decision == JOptionPane.YES_OPTION){
+			return true;
 		}
 		
 		else
-			return true;
+			return false;
+		
+	}
+	
+	public void errorDialog(String message){
+		
+		JOptionPane.showMessageDialog(this.getContentPane(), 
+						message);
+		
 		
 	}
 	
@@ -1832,7 +1946,6 @@ public class Gradebook extends JFrame{
 			
 			ResultSet rs = stmt.executeQuery("SELECT * FROM course_section;");
 		
-			
 						
 			while(rs.next()){
 				courseSectionList.addElement(
@@ -1884,7 +1997,6 @@ public class Gradebook extends JFrame{
 									rs.getString("max_stu"),
 									rs.getString("day"));
 				
-						
 			}
 			
 					
@@ -1937,8 +2049,7 @@ public class Gradebook extends JFrame{
 			rs.close();
 			stmt.close();
 			c.close();
-			
-			
+				
 		}
 		
 		catch(Exception e){
@@ -1946,7 +2057,6 @@ public class Gradebook extends JFrame{
 			System.err.println(e);
 
 		}
-		
 	}
 	
 	
@@ -1979,43 +2089,9 @@ public class Gradebook extends JFrame{
 			
 			return false;
 		}
-		
-		
 	}
 	
-	private boolean addStudentToSection(int id, int section) {
 		
-		try{
-			Connection c = null;
-			Statement stmt = null;
-			
-			Class.forName("org.sqlite.JDBC");
-			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
-			
-			
-			stmt = c.createStatement();
-			stmt.executeUpdate("INSERT INTO section_roster (section_num, student_id)"
-									+ "VALUES (" + section
-									+ "," + id + ");");
-		
-					
-			
-			stmt.close();
-			c.close();
-			
-			return true;
-		}
-		
-		catch(Exception e){
-			
-			System.err.println(e);
-			
-			return false;
-		}
-		
-		
-	}
-	
 	public String[][] createAssignmentArray(){
 		String[][] output = new String[assignmentList.getSize()][5];
 		
@@ -2049,6 +2125,15 @@ public class Gradebook extends JFrame{
 			Class.forName("org.sqlite.JDBC");
 			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 			
+			/*Debug
+			System.out.println("SELECT grades.assignment_num, assignment.name, grades.points, assignment.total_points "
+			+ "FROM assignment, grades " 
+			+ "WHERE assignment.course = '"
+			+ courseNum + "' "
+			+ "AND grades.student_id = '"
+			+ studentID + "' "
+			+ "AND grades.assignment_num = assignment.assignment_id;");
+			//*/
 			
 			
 			stmt = c.createStatement();
@@ -2059,6 +2144,8 @@ public class Gradebook extends JFrame{
 							+ courseNum + "' "
 							+ "AND grades.student_id = '"
 							+ studentID + "' "
+							+ "AND grades.section_num = '"
+							+ sectionNumber + "' "
 							+ "AND grades.assignment_num = assignment.assignment_id;");
 		
 			
@@ -2088,11 +2175,10 @@ public class Gradebook extends JFrame{
 			System.err.println(e);
 			
 			return false;
-		}
-		
+		}	
 	}
 	
-private boolean saveStudentGradesToDB(int studentID) {
+	private boolean saveStudentGradesToDB(int studentID, int sectionNumber) {
 		
 		try{
 			Connection c = null;
@@ -2101,12 +2187,25 @@ private boolean saveStudentGradesToDB(int studentID) {
 			Class.forName("org.sqlite.JDBC");
 			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
 			
+			
+			
+			
 			for(int i = 0; i < gradeList.getSize(); i++){
 				stmt = c.createStatement();
-				stmt.executeUpdate("INSERT or REPLACE INTO grades (assignment_num, student_id, points) "
+				
+				/*Debug
+				System.out.println("INSERT or REPLACE INTO grades (assignment_num, student_id, points) "
+						+ "VALUES (" + gradeList.getElementAt(i).getNum()
+						+ "," + studentID
+						+ "," + gradeList.getElementAt(i).getPoints() + ");");
+				*/
+				
+				
+				stmt.executeUpdate("INSERT or REPLACE INTO grades (assignment_num, student_id, points, section_num) "
 									+ "VALUES (" + gradeList.getElementAt(i).getNum()
 									+ "," + studentID
-									+ "," + gradeList.getElementAt(i).getPoints() + ");");
+									+ "," + gradeList.getElementAt(i).getPoints() + ", "
+									+ sectionNumber +");");
 		
 					
 			
@@ -2125,8 +2224,6 @@ private boolean saveStudentGradesToDB(int studentID) {
 			
 			return false;
 		}
-		
-		
 	}
 	
 	public void getReportInfo(String courseNumber, int courseSection){
@@ -2144,13 +2241,17 @@ private boolean saveStudentGradesToDB(int studentID) {
 					
 			stmt = c.createStatement();
 			
-			ResultSet rs = stmt.executeQuery("SELECT section_roster.section_num, student.last_name, student.first_name, "
-					+ "SUM(grades.points) as points, SUM(assignment.total_points) as totalPoints "
-					+ "FROM section_roster, student, grades, assignment "
-					+ "WHERE student.id_num = grades.student_id "
+						
+			ResultSet rs = stmt.executeQuery("SELECT section_roster.section_num, student.last_name, student.first_name, achieved_points, totalPoints "
+					+ "FROM section_roster, student, grades, assignment,"
+					+ "(SELECT SUM(assignment.total_points) as totalPoints FROM assignment GROUP BY assignment.course), "
+					+ "(SELECT SUM(points) as achieved_points, student_id as stu FROM grades, assignment WHERE section_num = '"
+					+ courseSection + "' AND grades.assignment_num = assignment.assignment_id GROUP BY student_id)"
+					+ "WHERE student.id_num = stu "
 					+ "AND grades.assignment_num = assignment.assignment_id "
 					+ "AND assignment.course = \"" + courseNumber + "\" "
-					+ "AND section_roster.section_num = \"" + courseSection + "\""
+					+ "AND grades.section_num = \"" + courseSection + "\""
+					+ "AND section_roster.student_id = student.id_num "
 					+ "GROUP BY student.id_num, assignment.course "
 					+ "ORDER BY points DESC;");
 		
@@ -2158,10 +2259,11 @@ private boolean saveStudentGradesToDB(int studentID) {
 			int i = 1;			
 			while(rs.next()){
 				reportRecords.add(new String[]{(rs.getString("last_name") + ", " + rs.getString("first_name")),
-					rs.getString("points"), rs.getString("totalPoints"),
-					(Float.parseFloat(rs.getString("points")) / Float.parseFloat(rs.getString("totalPoints")) * 100) + "",
-					getLetterGrade((Float.parseFloat(rs.getString("points")) / Float.parseFloat(rs.getString("totalPoints")) * 100)), i++ + ""});
+					rs.getString("achieved_points"), rs.getString("totalPoints"),
+					(Float.parseFloat(rs.getString("achieved_points")) / Float.parseFloat(rs.getString("totalPoints")) * 100) + "",
+					getLetterGrade((Float.parseFloat(rs.getString("achieved_points")) / Float.parseFloat(rs.getString("totalPoints")) * 100)), i++ + ""});
 			}
+			
 			
 			/* DEBUG
 			for(int i = 0 ; i < reportRecords.size(); i++){
@@ -2181,18 +2283,18 @@ private boolean saveStudentGradesToDB(int studentID) {
 			stmt.close();
 			c.close();
 			
-			
-			
 		}
 		
 		catch(Exception e){
 			
 			System.err.println(e);
 			
-			
 		}
 	}
 	
+	
+	//Convert a percentage grade into a letter grade
+	//
 	public String getLetterGrade(float percentage){
 		
 		String letterGrade;
@@ -2221,4 +2323,64 @@ private boolean saveStudentGradesToDB(int studentID) {
 		return letterGrade;
 	}
 	
+	
+	//Check to make sure the student information meets various formatting requirements
+	//	If it doesn't, return null, if it does, return the string
+	//
+	public Student checkNewStudent(Student input){
+		
+		if(input.getFirst().contains(" "))
+			return null;
+		if(input.getLast().contains(" "))
+			return null;
+		if(input.getState().length() > 2)
+			return null;
+		if(Pattern.matches("[a-zA-Z]+", input.getZip()))
+			return null;
+		if(input.getZip().length() != 5)
+		if(Pattern.matches("[a-zA-Z]+", input.getDOB()))
+			return null;
+		if(input.getDOB().length() != 8)
+			return null;
+		
+		return input;
+	}
+
+	public int getMaxStudents(String courseNumber){
+		try{
+			
+			Connection c = null;
+			Statement stmt = null;
+			
+			Class.forName("org.sqlite.JDBC");
+			c = DriverManager.getConnection("jdbc:sqlite:res/Capstone");
+			
+					
+			stmt = c.createStatement();
+			
+						
+			ResultSet rs = stmt.executeQuery("SELECT max_stu FROM course WHERE course_num = '"
+					+ courseNumber + "';");
+		
+			
+			int maxStudents = 0;
+			
+			while(rs.next()){
+				maxStudents = Integer.parseInt(rs.getString("max_stu"));
+			}
+			
+			rs.close();
+			stmt.close();
+			c.close();
+			
+			return maxStudents;
+		}
+		
+		catch(Exception e){
+			
+			System.err.println(e);
+			
+			return 0;	
+		}
+	}
 }

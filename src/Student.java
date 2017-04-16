@@ -1,8 +1,8 @@
 
 public class Student {
 
-	private int id_num, zip;
-	private String firstName, lastName, address, city,  state, dob;
+	private int id_num;
+	private String firstName, lastName, address, city,  state, dob, zip;
 	
 	
 	public Student(){
@@ -27,7 +27,7 @@ public class Student {
 		city = newCity;
 		state = newState;
 		dob = newDob;
-		zip = Integer.parseInt(newZip);
+		zip = newZip;
 	}
 	
 	
@@ -60,9 +60,10 @@ public class Student {
 		return state;
 	}
 	
-	public int getZip(){
+	public String getZip(){
 		return zip;
 	}
+	
 	
 	public String getDOB(){
 		return dob;

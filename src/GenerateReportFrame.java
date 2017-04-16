@@ -176,6 +176,7 @@ public class GenerateReportFrame extends JPanel{
 	
 	public void resetDisplay(){
 		students.setModel(new DefaultListModel<Student>());
+		gradesTableModel.setRowCount(0);
 	}
 	
 }

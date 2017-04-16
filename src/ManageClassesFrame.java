@@ -16,18 +16,36 @@ public class ManageClassesFrame extends JPanel{
 	
 	private static final long serialVersionUID = 1L;
 	
-	private JPanel mainPanel, leftPanel, leftContentPanel, leftButtonPanel, rightPanel,
-					rightContentPanel, rightClassInfoPanel, rightStudentListPanel, rightButtonPanel, homeButtonPanel,
+	private JPanel 	mainPanel, 
+					leftPanel, 
+					leftContentPanel, 
+					leftButtonPanel, 
+					rightPanel,
+					rightContentPanel, 
+					rightClassInfoPanel, 
+					rightStudentListPanel, 
+					rightButtonPanel, 
+					homeButtonPanel,
 					studentListButtonsPanel;
 	
-	private JTextField classID, txtCourseNum, txtMeetingDay, txtMaxStudents;
+	private JTextField  classID, 
+						txtCourseNum, 
+						txtMeetingDay, 
+						txtMaxStudents;
 	
-	private JButton btnDeleteClass, btnAddClass, btnLoadClassInfo, btnSubmitAboveChanges, btnCancelToHome, btnAddStudent,
-					btnDeleteStudent;
+	private JButton 	btnDeleteClass, 
+						btnAddClass, 
+						btnLoadClassInfo, 
+						btnCancelToHome, 
+						btnAddStudent,
+						btnDeleteStudent;
 	
-	private JScrollPane classList, classRoster;
+	private JScrollPane 	classList, 
+							classRoster;
 	
 	private JList<CourseSection> list;
+	
+	
 	private JList<Student> list2;
 
 	public ManageClassesFrame(){
@@ -84,7 +102,6 @@ public class ManageClassesFrame extends JPanel{
 		btnDeleteClass = new JButton("Delete Class");
 		btnAddClass = new JButton("Add new Class");
 		btnLoadClassInfo = new JButton("Show Class Info >>>");
-		btnSubmitAboveChanges = new JButton("<<< Store Class info");
 		btnCancelToHome = new JButton("Home Screen");
 		btnAddStudent = new JButton("Add Student");
 		btnDeleteStudent = new JButton("Delete Student");
@@ -219,6 +236,7 @@ public class ManageClassesFrame extends JPanel{
 	
 	public void resetDisplay(){
 		list2.setModel(new DefaultListModel<Student>());
+		list.setModel(new DefaultListModel<CourseSection>());
 		
 		classID.setText("Class Number");
 		txtCourseNum.setText("Course Name/Number");

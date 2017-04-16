@@ -38,9 +38,9 @@ public class NewStudentPopup extends JFrame{
 		leftPanel.add(new JLabel("Last Name:"));
 		leftPanel.add(new JLabel("Address:"));
 		leftPanel.add(new JLabel("City:"));
-		leftPanel.add(new JLabel("State:"));
+		leftPanel.add(new JLabel("State:  (As 2 letters)"));
 		leftPanel.add(new JLabel("Zip:"));
-		leftPanel.add(new JLabel("Date of Birth:"));
+		leftPanel.add(new JLabel("Date of Birth: (MMDDYYYY)"));
 		
 		rightPanel.setLayout(new GridLayout(0,1));
 		rightPanel.add(txtFirstName);

@@ -16,24 +16,44 @@ public class EnterGrades extends JPanel{
 
 	private static final long serialVersionUID = 1L;
 
-	private JPanel mainPanel, topPanel, topLeftContentPane, topRightContentPane, bottomPanel, homeButtonPanel,
-					studentSelectPanel, classSelectPanel, bottomNorthPanel;
+	private JPanel 	mainPanel, 
+					topPanel, 
+					topLeftContentPane, 
+					topRightContentPane, 
+					bottomPanel, 
+					homeButtonPanel,
+					studentSelectPanel, 
+					classSelectPanel, 
+					bottomNorthPanel;
 	
 	private JTable assignmentGrades;
+	
 	private DefaultTableModel gradesTableModel;
 	
 	private JScrollPane tableScrollPane;
 	
-	private JLabel spacer_1, spacer_2;
+	private JLabel 	spacer_1, 
+					spacer_2;
 	
 	private JList<CourseSection> classes;
+	
+	
 	private JList<Student> students;
 	
-	private JScrollPane classList, classRoster;
+	private JScrollPane 	classList, 
+							classRoster;
 	
-	private JButton btnCancelToHome, btnSaveAllGrades, btnShowClassRoster, btnShowStudentAssignments;
+	private JButton 	btnCancelToHome, 
+						btnSaveAllGrades, 
+						btnShowClassRoster, 
+						btnShowStudentAssignments, 
+						btnSelectNewClass;
 	
-	private String[] displayColumns = {"Assignment Name", "Points", "Total Points", "Percentage", "Letter Grade"};
+	private String[] displayColumns = {	"Assignment Name", 
+										"Points", 
+										"Total Points", 
+										"Percentage", 
+										"Letter Grade"};
 	
 	public EnterGrades(){
 		
@@ -46,7 +66,7 @@ public class EnterGrades extends JPanel{
 		studentSelectPanel = new JPanel();
 		classSelectPanel = new JPanel();
 		bottomNorthPanel = new JPanel();
-				
+					
 		
 		spacer_1 = new JLabel("");
 		spacer_2 = new JLabel("");
@@ -68,12 +88,7 @@ public class EnterGrades extends JPanel{
 		btnSaveAllGrades = new JButton("Save All Grades");
 		btnShowStudentAssignments = new JButton("Show Student Assignments");
 		btnShowClassRoster = new JButton("Show Class Roster");
-		
-		//TEMPORARY CODE
-		String[][] assignmentData = {
-				{"Assignment name", "Assignment TYpe", "Points / Total", "Percentage", "Letter"}
-		};
-		
+		btnSelectNewClass = new JButton("Select New Class");
 		
 		assignmentGrades = new JTable();
 		gradesTableModel = (DefaultTableModel)assignmentGrades.getModel();
@@ -90,18 +105,17 @@ public class EnterGrades extends JPanel{
 		classRoster = new JScrollPane();
 				
 				
-		
 		classList.setViewportView(classes);
 		classRoster.setViewportView(students);
 		
-		
-		
+				
 		homeButtonPanel.add(btnSaveAllGrades);
 		homeButtonPanel.add(btnCancelToHome);
 		
 		studentSelectPanel.add(classRoster);
 		
 		classSelectPanel.add(classList);
+		
 		classSelectPanel.add(btnShowClassRoster, BorderLayout.SOUTH);
 		topLeftContentPane.add(classSelectPanel, BorderLayout.CENTER);
 		topRightContentPane.add(studentSelectPanel, BorderLayout.CENTER);
@@ -111,8 +125,9 @@ public class EnterGrades extends JPanel{
 		topPanel.add(topRightContentPane);
 
 		
-		
+		bottomNorthPanel.add(btnSelectNewClass);
 		bottomNorthPanel.add(btnShowStudentAssignments);
+		
 		
 		bottomPanel.add(tableScrollPane, BorderLayout.CENTER);
 		bottomPanel.add(spacer_1, BorderLayout.EAST);
@@ -133,6 +148,10 @@ public class EnterGrades extends JPanel{
 	
 	public void saveActionListener(ActionListener sal){
 		btnSaveAllGrades.addActionListener(sal);
+	}
+	
+	public void selectNewClassActionListener(ActionListener sal){
+		btnSelectNewClass.addActionListener(sal);
 	}
 	
 	public void showClassActionListener(ActionListener scal){
@@ -178,7 +197,14 @@ public class EnterGrades extends JPanel{
 	
 	public void resetDisplay(){
 		students.setModel(new DefaultListModel<Student>());
+		classes.setEnabled(true);
+		
 		gradesTableModel.setRowCount(0);
+		
+	}
+	
+	public void enableClassSelection(boolean input){
+		classes.setEnabled(input);
 	}
 	
 }

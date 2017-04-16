@@ -66,7 +66,7 @@ public class EditAssignmentPopup extends JFrame{
 		
 		
 		this.setBounds(250, 250, 640, 480);
-		this.setTitle("Create New Assignment");
+		this.setTitle("Modify Assignment");
 		this.setLayout(new BorderLayout());
 		this.add(mainPanel, BorderLayout.CENTER);
 		this.add(btnSubmit, BorderLayout.SOUTH);

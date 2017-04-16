@@ -11,4 +11,8 @@ public class AssignmentType {
 	public String toString(){
 		return description;
 	}
+	
+	public int numer(){
+		return number;
+	}
 }

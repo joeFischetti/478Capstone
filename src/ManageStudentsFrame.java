@@ -90,7 +90,7 @@ public class ManageStudentsFrame extends JPanel {
 		btnSubmitAboveChanges = new JButton("Modify Student info");
 		btnCancelToHome = new JButton("Home Screen");
 		btnNewStudent = new JButton("Add New Student");
-		btnDeleteStudent = new JButton("Delete Selected Student");
+		btnDeleteStudent = new JButton("Deactivate Selected Student");
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
 		

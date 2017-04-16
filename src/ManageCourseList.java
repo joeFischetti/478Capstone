@@ -236,6 +236,7 @@ public class ManageCourseList extends JPanel{
 	public void resetDisplay(){
 		
 		list2.setModel(new DefaultListModel<Assignment>());
+		list.setModel(new DefaultListModel<Course>());
 		
 		txtCourseNumber.setText("Course Number");
 		txtCourseName.setText("Course Name");
