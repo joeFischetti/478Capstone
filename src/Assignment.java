@@ -1,8 +1,12 @@
+//This is the assignment class.
+//It contains variables used for defining an assignment object
 
 public class Assignment {
 	private String name, course, description;
 	private int id, type_num, total_points;
 	
+	//Constructor creates a new assignment object
+	//
 	public Assignment(int newId, String newName, String newCourse, String newDescription, int type, int points){
 		id = newId;
 		name = new String(newName);
@@ -12,6 +16,9 @@ public class Assignment {
 		total_points = points;
 	}
 	
+	
+	//Getter and setter methods
+	//
 	public String getName(){
 		return name;
 	}
