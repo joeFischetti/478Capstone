@@ -1,4 +1,6 @@
-
+//AssignmentType class
+// This class is simply a linker class that joins the assignment to the assignment type
+//
 public class AssignmentType {
 	private int number;
 	private String description;
