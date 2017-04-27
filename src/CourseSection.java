@@ -1,4 +1,5 @@
-
+//Class used for creating a single course section
+//
 public class CourseSection {
 	private int section_number;
 	private String course_num;
@@ -7,7 +8,9 @@ public class CourseSection {
 		section_number = section;
 		course_num = new String(course);
 	}
-	
+
+	//Public getter methods
+	//
 	public int getSection(){
 		return section_number;
 	}
