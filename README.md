@@ -10,7 +10,8 @@ Within the Gradebook class there are inner classes, many of which implement Acti
 
 Many of the different pages/screens will all function almost identically.  They're usually broken down into a major selection on the left, with a sub selection on the right.  
 
-#Manage Students (As an example):
+#Manage Students 
+(As an example):
 The manage students page consists of a list of students on the left side, with detailed student info on the right side.  The Student list is a DefaultListModel of type Student.  Initially, an SQL query is used that returns the ID number, first name, and last name of each student, and adds each student to the list model.  When a student is selected from the pane and the 'load more' button is selected, the ID number of the selected student is used to query the database for all of the student information. That information is then placed in the right side of the windows.
 
 The add student button opens a new window with blank fields.  After the submit button is pressed, a new student is created with the information provided, and that student object's data is then placed in the database.
