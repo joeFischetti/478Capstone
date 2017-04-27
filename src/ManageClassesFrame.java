@@ -1,7 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
-
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -17,35 +16,34 @@ public class ManageClassesFrame extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
 	private JPanel 	mainPanel, 
-					leftPanel, 
-					leftContentPanel, 
-					leftButtonPanel, 
-					rightPanel,
-					rightContentPanel, 
-					rightClassInfoPanel, 
-					rightStudentListPanel, 
-					rightButtonPanel, 
-					homeButtonPanel,
-					studentListButtonsPanel;
+			leftPanel, 
+			leftContentPanel, 
+			leftButtonPanel, 
+			rightPanel,
+			rightContentPanel, 
+			rightClassInfoPanel, 
+			rightStudentListPanel, 
+			rightButtonPanel, 
+			homeButtonPanel,
+			studentListButtonsPanel;
 	
-	private JTextField  classID, 
-						txtCourseNum, 
-						txtMeetingDay, 
-						txtMaxStudents;
+	private JTextField  	classID, 
+				txtCourseNum, 
+				txtMeetingDay, 
+				txtMaxStudents;
 	
 	private JButton 	btnDeleteClass, 
-						btnAddClass, 
-						btnLoadClassInfo, 
-						btnCancelToHome, 
-						btnAddStudent,
-						btnDeleteStudent;
+				btnAddClass, 
+				btnLoadClassInfo, 
+				btnCancelToHome, 
+				btnAddStudent,
+				btnDeleteStudent;
 	
 	private JScrollPane 	classList, 
-							classRoster;
+				classRoster;
 	
 	private JList<CourseSection> list;
-	
-	
+		
 	private JList<Student> list2;
 
 	public ManageClassesFrame(){
@@ -72,7 +70,6 @@ public class ManageClassesFrame extends JPanel{
 		JLabel lblMeetingDay = new JLabel("Meeting Day");
 		JLabel lblMaxStudents = new JLabel("Max Students");
 				
-				
 		//Create each of the JText fields for different
 		//	pieces of class data
 		//
@@ -81,8 +78,6 @@ public class ManageClassesFrame extends JPanel{
 		txtMeetingDay = new JTextField();
 		txtMaxStudents = new JTextField();
 	
-				
-			
 		//Set each panel's layout
 		//
 		mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -133,8 +128,6 @@ public class ManageClassesFrame extends JPanel{
 		txtMaxStudents.setText("Max Students");
 		txtMaxStudents.setColumns(10);
 			
-				
-				
 		//Populate each of the panels
 		//
 		leftContentPanel.add(classList);
@@ -202,10 +195,6 @@ public class ManageClassesFrame extends JPanel{
 	public void showClassActionListener(ActionListener scal){
 		btnLoadClassInfo.addActionListener(scal);
 	}
-	
-	//public void submitChangesActionListener(ActionListener sal){
-	//	btnSubmitAboveChanges.addActionListener(sal);
-	//}
 	
 	public void homeButtonActionListener(ActionListener hal){
 		btnCancelToHome.addActionListener(hal);
