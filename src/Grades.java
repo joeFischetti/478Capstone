@@ -11,6 +11,8 @@ public class Grades {
 		totalPoints = newTotal;
 		percentage = points / totalPoints * 100;
 		
+		//if/else statement sets the letter grade based on the number grade
+		//
 		if(percentage > 92)
 			letterGrade = new String("A");
 		else if(percentage > 90)
@@ -30,21 +32,23 @@ public class Grades {
 		else if(percentage > 65)
 			letterGrade = new String("D");
 		else
-			letterGrade = new String("F");
-		
-		
-		
+			letterGrade = new String("F");	
 	}
 	
+	//Return an array of data for the grade
+	//
 	public String[] getInfo(){
 		return new String[]{assignmentName, points + "", totalPoints + "", percentage + "", letterGrade};
 	}
 	
+	//Get the number of the assignment that this grade belongs to
+	//
 	public int getNum(){
-		return assignmentNum;
-		
+		return assignmentNum;	
 	}
 	
+	//Get the number of points that the student got on the assignment
+	//
 	public Float getPoints(){
 		return points;
 	}
