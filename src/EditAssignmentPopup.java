@@ -119,8 +119,11 @@ public class EditAssignmentPopup extends JFrame{
 	//	from the student provided
 	//
 	public Assignment newAssignment(){
-		return new Assignment(assignment.getID(), assignment.getName(), assignment.getCourse(), 
-							txtDescription.getText(), assignment.getType(), 
-							Integer.parseInt(txtTotalPoints.getText()));
+		return new Assignment(	assignment.getID(), 
+				      	assignment.getName(), 
+				      	assignment.getCourse(), 
+					txtDescription.getText(), 
+				      	assignment.getType(), 
+					Integer.parseInt(txtTotalPoints.getText()));
 	}
 }
